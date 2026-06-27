@@ -1,4 +1,4 @@
-import { createFileRoute } from '@tanstack/react-router'
+import { createFileRoute, redirect } from '@tanstack/react-router'
 import * as React from 'react'
 import { useTranslations } from 'use-intl'
 import { LocalizedLink } from '~/components/common/localized-link'
@@ -9,6 +9,9 @@ import { seo } from '~/utils/seo'
 import { getPageMeta } from '~/utils/seo-meta'
 
 export const Route = createFileRoute('/{-$locale}/_public/')({
+  beforeLoad: () => {
+    throw redirect({ to: '/dashboard', search: { sessionId: undefined } })
+  },
   head: ({ params }: any) => {
     const locale = params.locale
     const meta = getPageMeta('/', locale)

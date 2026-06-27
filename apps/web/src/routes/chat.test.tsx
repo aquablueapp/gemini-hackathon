@@ -7,7 +7,7 @@ import { DashboardPage } from './dashboard'
 // Mock react-router hook to avoid RouterProvider dependencies
 vi.mock('@tanstack/react-router', () => ({
   useNavigate: vi.fn().mockReturnValue(vi.fn()),
-  useSearch: vi.fn().mockReturnValue({ appId: undefined }),
+  useSearch: vi.fn().mockReturnValue({ sessionId: 'session_gcp_clean' }),
   createFileRoute: vi.fn().mockReturnValue(() => ({})),
   useLocation: vi.fn().mockReturnValue({ pathname: '/dashboard' }),
   useParams: vi.fn().mockReturnValue({}),

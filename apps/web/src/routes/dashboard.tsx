@@ -1,5 +1,5 @@
 import { queryOptions, useQuery, useQueryClient } from '@tanstack/react-query'
-import { createFileRoute, redirect } from '@tanstack/react-router'
+import { createFileRoute, redirect, useNavigate, useSearch } from '@tanstack/react-router'
 import {
   ArrowLeft,
   Bot,
@@ -42,13 +42,9 @@ export const appletsQueryOptions = queryOptions({
 })
 
 export const Route = createFileRoute('/dashboard')({
-  beforeLoad: () => {
-    // Client-side demo login guard redirecting to /login
-    if (typeof window !== 'undefined') {
-      const session = getCookie('auth_session')
-      if (session !== 'demo_logged_in') {
-        throw redirect({ to: '/{-$locale}/login', params: { locale: 'en' } })
-      }
+  validateSearch: (search: Record<string, unknown>): { sessionId?: string } => {
+    return {
+      sessionId: search.sessionId ? String(search.sessionId) : undefined,
     }
   },
   loader: ({ context }: any) => {
@@ -247,12 +243,14 @@ export function DashboardPage() {
     enabled: typeof window !== 'undefined',
   })
 
+  const { sessionId } = useSearch({ from: '/dashboard' })
+  const navigate = useNavigate({ from: '/dashboard' })
+
   // System states
   const [activeMode, setActiveMode] = React.useState<'employee' | 'develop'>('employee')
   const [selectedEmployeeId, setSelectedEmployeeId] = React.useState<string | null>(null)
 
   // AI Chat States
-  const [sessionId, setSessionId] = React.useState('session_placeholder')
   const [messages, setMessages] = React.useState<Message[]>([])
   const [input, setInput] = React.useState('')
   const [isStreaming, setIsStreaming] = React.useState(false)
@@ -381,12 +379,39 @@ export function DashboardPage() {
 
   const latestWorkflowPlan = React.useMemo(() => getLatestWorkflowPlan(messages), [messages])
 
+  // Initialize sessionId if missing from URL
+  React.useEffect(() => {
+    if (typeof window === 'undefined') return
+
+    if (!sessionId) {
+      const employees = applets as any[]
+      const defaultId = employees.length > 0 ? employees[0].id : `session_${Date.now()}`
+      navigate({
+        search: (prev) => ({ ...prev, sessionId: defaultId }),
+        replace: true,
+      })
+    }
+  }, [sessionId, applets, navigate])
+
+  // Sync internal UI state from the URL's sessionId
+  React.useEffect(() => {
+    if (!sessionId) return
+
+    const employees = applets as any[]
+    const isEmployee = employees.some(emp => emp.id === sessionId)
+
+    if (isEmployee) {
+      setActiveMode('employee')
+      setSelectedEmployeeId(sessionId)
+    }
+    else {
+      setActiveMode('develop')
+      setSelectedEmployeeId(null)
+    }
+  }, [sessionId, applets])
+
   // Client-side hydration safety checks
   React.useEffect(() => {
-    if (sessionId === 'session_placeholder') {
-      setSessionId(`session_${Date.now()}`)
-    }
-
     const saved = localStorage.getItem('aquablue_sessions')
     const sessions = saved ? JSON.parse(saved) : []
     
@@ -409,27 +434,6 @@ export function DashboardPage() {
       localStorage.setItem('aquablue_sessions', JSON.stringify(sessions))
     }
   }, [])
-
-  React.useEffect(() => {
-    const employees = applets as any[]
-    if (employees.length === 0) {
-      setSelectedEmployeeId(null)
-      return
-    }
-
-    if (!selectedEmployeeId || !employees.some(employee => employee.id === selectedEmployeeId)) {
-      const nextEmployeeId = employees[0].id
-      setSelectedEmployeeId(nextEmployeeId)
-      if (activeMode === 'employee') {
-        setSessionId(nextEmployeeId)
-      }
-      return
-    }
-
-    if (activeMode === 'employee' && sessionId !== selectedEmployeeId) {
-      setSessionId(selectedEmployeeId)
-    }
-  }, [activeMode, applets, selectedEmployeeId, sessionId])
 
   // Load session messages when sessionId changes
   React.useEffect(() => {
@@ -494,7 +498,7 @@ export function DashboardPage() {
 
   // Save session messages to local storage whenever they change and streaming finishes
   React.useEffect(() => {
-    if (messages.length > 0 && !isStreaming && !sessionId.startsWith('session_gcp') && !sessionId.startsWith('session_firebase')) {
+    if (sessionId && messages.length > 0 && !isStreaming && !sessionId.startsWith('session_gcp') && !sessionId.startsWith('session_firebase')) {
       localStorage.setItem(`aquablue_session_messages_${sessionId}`, JSON.stringify(messages))
     }
   }, [messages, isStreaming, sessionId])
@@ -754,7 +758,7 @@ export function DashboardPage() {
     // Add to local sessions if it is a new session
     if (!localSessions.some(s => s.id === sessionId)) {
       const label = finalMessageText.length > 25 ? `${finalMessageText.substring(0, 25)}...` : finalMessageText
-      const newSession = { id: sessionId, label }
+      const newSession = { id: sessionId || '', label }
       const updated = [newSession, ...localSessions]
       setLocalSessions(updated)
       localStorage.setItem('aquablue_sessions', JSON.stringify(updated))
@@ -1005,8 +1009,9 @@ setMessages(prev =>
   }
 
   const handleNewEmployee = () => {
-    setSessionId(`session_${Date.now()}`)
-    setActiveMode('develop')
+    navigate({
+      search: (prev) => ({ ...prev, sessionId: `session_${Date.now()}` })
+    })
   }
 
   const handleItemRename = (id: string, newLabel: string) => {
@@ -1020,8 +1025,9 @@ setMessages(prev =>
     setLocalSessions(updated)
     localStorage.setItem('aquablue_sessions', JSON.stringify(updated))
     if (sessionId === id) {
-      setSessionId(`session_${Date.now()}`)
-      setActiveMode('develop')
+      navigate({
+        search: (prev) => ({ ...prev, sessionId: `session_${Date.now()}` })
+      })
     }
   }
 
@@ -1041,16 +1047,13 @@ setMessages(prev =>
           icon: <Bot className="w-4 h-4" />,
           badge: employee.dependencies?.length ? String(employee.dependencies.length) : undefined,
         })),
+        ...localSessions.map(session => ({
+          id: session.id,
+          label: session.label,
+          icon: <ClipboardList className="w-4 h-4" />,
+          editable: true,
+        })),
       ],
-    },
-    {
-      title: 'Recent Sessions',
-      items: localSessions.map(session => ({
-        id: session.id,
-        label: session.label,
-        icon: <ClipboardList className="w-4 h-4" />,
-        editable: true,
-      })),
     },
   ]
 
@@ -1059,17 +1062,9 @@ setMessages(prev =>
       handleNewEmployee()
     }
     else {
-      const isEmployee = (applets as any[]).some(emp => emp.id === item.id)
-      if (isEmployee) {
-        setActiveMode('employee')
-        setSelectedEmployeeId(item.id)
-        setSessionId(item.id)
-      }
-      else {
-        setActiveMode('develop')
-        setSelectedEmployeeId(null)
-        setSessionId(item.id)
-      }
+      navigate({
+        search: (prev) => ({ ...prev, sessionId: item.id })
+      })
       setRunningAppId(null)
     }
   }
@@ -1374,8 +1369,8 @@ setMessages(prev =>
              DEVELOPMENT STATE: AI Interactive Aquablue
              =================================================== */
           renderChatSurface({
-            title: localSessions.find(s => s.id === sessionId)?.label || 'New AI Employee',
-            subtitle: `Session: ${sessionId.substring(8, 16)}...`,
+            title: localSessions.find(s => s.id === sessionId)?.label || (applets as any[]).find(a => a.id === sessionId)?.name || 'New Session',
+            subtitle: `Session: ${sessionId ? sessionId.substring(0, 12) : ''}...`,
             showBackButton: true,
           })
         )}

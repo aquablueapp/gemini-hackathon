@@ -46,26 +46,11 @@ export function SaasPublicLayout({ children }: { children: React.ReactNode }) {
             <ModeToggle />
             <LocaleSwitcher />
 
-            {isLoggedIn
-              ? (
-                  <div className="flex items-center gap-2">
-                    <LocalizedLink to="/dashboard">
-                      <Button size="sm" className="font-bold px-4 rounded-xl shadow-sm transition-all active:scale-[0.98] bg-blue-600 hover:bg-blue-700 text-white border-0">
-                        {t('console') || 'Console'}
-                      </Button>
-                    </LocalizedLink>
-                    <Button size="sm" variant="ghost" onClick={handleSignOut} className="font-semibold text-stone-500 hover:text-stone-800 dark:hover:text-stone-200 text-xs">
-                      Sign Out
-                    </Button>
-                  </div>
-                )
-              : (
-                  <LocalizedLink to="/login">
-                    <Button size="sm" className="font-bold px-4 rounded-xl shadow-sm transition-all active:scale-[0.98] bg-blue-600 hover:bg-blue-700 text-white border-0">
-                      Sign In
-                    </Button>
-                  </LocalizedLink>
-                )}
+            <LocalizedLink to="/dashboard">
+              <Button size="sm" className="font-bold px-4 rounded-xl shadow-sm transition-all active:scale-[0.98] bg-blue-600 hover:bg-blue-700 text-white border-0">
+                {t('console') || 'Console'}
+              </Button>
+            </LocalizedLink>
           </div>
         </div>
       </header>
