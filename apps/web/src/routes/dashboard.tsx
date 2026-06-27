@@ -5,12 +5,15 @@ import {
   Bot,
   CheckCircle2,
   ClipboardList,
+  Mic,
   Paperclip,
   Play,
   Plus,
   Send,
+  Square,
   Terminal,
   UserPlus,
+  Volume2,
   X,
 } from 'lucide-react'
 import * as React from 'react'
@@ -258,6 +261,13 @@ export function DashboardPage() {
   const [selectedModel, setSelectedModel] = React.useState('gemini-omni')
   const fileInputRef = React.useRef<HTMLInputElement>(null)
   const [attachedFile, setAttachedFile] = React.useState<{ base64: string, mimeType: string, name: string } | null>(null)
+
+  // Voice Recording States
+  const [isRecording, setIsRecording] = React.useState(false)
+  const [recordingDuration, setRecordingDuration] = React.useState(0)
+  const mediaRecorderRef = React.useRef<MediaRecorder | null>(null)
+  const audioChunksRef = React.useRef<Blob[]>([])
+  const recordingTimerRef = React.useRef<any>(null)
 
   // Tool & Agent Thinking States
   const [thinkingLogs, setThinkingLogs] = React.useState<string[]>([])
@@ -571,6 +581,70 @@ export function DashboardPage() {
       }
     }
     reader.readAsDataURL(file)
+  }
+
+  const startRecording = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
+      const recorder = new MediaRecorder(stream)
+      mediaRecorderRef.current = recorder
+      audioChunksRef.current = []
+
+      recorder.ondataavailable = (e) => {
+        if (e.data.size > 0) {
+          audioChunksRef.current.push(e.data)
+        }
+      }
+
+      recorder.onstop = () => {
+        const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' })
+        const reader = new FileReader()
+        reader.onloadend = () => {
+          const result = reader.result as string
+          const commaIdx = result.indexOf(',')
+          if (commaIdx !== -1) {
+            const base64 = result.substring(commaIdx + 1)
+            setAttachedFile({
+              base64,
+              mimeType: 'audio/webm',
+              name: `voice_message_${Date.now()}.webm`,
+            })
+          }
+        }
+        reader.readAsDataURL(audioBlob)
+
+        // Stop all tracks to release microphone
+        stream.getTracks().forEach(track => track.stop())
+      }
+
+      recorder.start()
+      setIsRecording(true)
+      setRecordingDuration(0)
+
+      recordingTimerRef.current = setInterval(() => {
+        setRecordingDuration(prev => prev + 1)
+      }, 1000)
+    } catch (err) {
+      console.error('Failed to start recording:', err)
+      alert('Microphone access denied or error starting recording.')
+    }
+  }
+
+  const stopRecording = () => {
+    if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
+      mediaRecorderRef.current.stop()
+    }
+    setIsRecording(false)
+    if (recordingTimerRef.current) {
+      clearInterval(recordingTimerRef.current)
+      recordingTimerRef.current = null
+    }
+  }
+
+  const formatDuration = (seconds: number) => {
+    const mins = Math.floor(seconds / 60)
+    const secs = seconds % 60
+    return `${mins}:${secs.toString().padStart(2, '0')}`
   }
 
   // ----------------------------------------------------
@@ -1054,6 +1128,10 @@ export function DashboardPage() {
                   </div>
                   <video src={`data:${attachedFile.mimeType};base64,${attachedFile.base64}`} className="w-full h-full object-cover" />
                 </div>
+              ) : attachedFile.mimeType.startsWith('audio/') ? (
+                <div className="w-9 h-9 rounded-lg border border-[#d9e1e8] dark:border-[#223145] bg-[#fff3f3] dark:bg-[#201515] shrink-0 flex items-center justify-center text-red-500">
+                  <Volume2 className="w-4 h-4 animate-pulse" />
+                </div>
               ) : (
                 <div className="w-9 h-9 rounded-lg border border-[#d9e1e8] dark:border-[#223145] bg-blue-100 dark:bg-blue-950 shrink-0 flex items-center justify-center text-blue-500">
                   <Paperclip className="w-4 h-4" />
@@ -1074,41 +1152,72 @@ export function DashboardPage() {
           </div>
         )}
 
-        <div className="h-14 px-5 flex items-center gap-3">
-          <input
-            type="file"
-            ref={fileInputRef}
-            onChange={handleFileChange}
-            accept="image/*,video/*"
-            className="hidden"
-          />
-          <button
-            onClick={() => fileInputRef.current?.click()}
-            disabled={isStreaming}
-            className="text-zinc-500 hover:text-blue-500 disabled:text-zinc-350 dark:disabled:text-stone-800 transition-colors p-1"
-            title="Attach Screen Recording or Screenshot"
-            type="button"
-          >
-            <Paperclip className="w-5 h-5 shrink-0" />
-          </button>
-          <input
-            value={input}
-            onChange={e => setInput(e.target.value)}
-            onKeyDown={e => e.key === 'Enter' && handleSend()}
-            placeholder={isStreaming ? 'Agent is thinking...' : t('describeTask') || 'Describe a task...'}
-            disabled={isStreaming}
-            className="min-w-0 flex-1 bg-transparent text-[15px] font-semibold text-zinc-650 dark:text-stone-300 outline-hidden placeholder:text-zinc-400 dark:placeholder:text-stone-600"
-          />
-          <button
-            onClick={() => handleSend()}
-            disabled={isStreaming || (!input.trim() && !attachedFile)}
-            className="text-blue-500 hover:text-blue-600 disabled:text-zinc-200 dark:disabled:text-stone-800 transition-colors"
-            type="button"
-            aria-label="Send message"
-          >
-            <Send className="w-6 h-6 shrink-0" />
-          </button>
-        </div>
+        {isRecording ? (
+          <div className="h-14 px-5 flex items-center justify-between gap-3 bg-red-50/50 dark:bg-red-950/10 border-t border-red-100/30 dark:border-red-950/20">
+            <div className="flex items-center gap-3">
+              <span className="relative flex h-2 w-2">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500"></span>
+              </span>
+              <span className="text-[13px] font-bold text-red-600 dark:text-red-400 tracking-wide font-mono animate-pulse">
+                Recording Voice Message... ({formatDuration(recordingDuration)})
+              </span>
+            </div>
+            <button
+              onClick={stopRecording}
+              className="flex items-center justify-center w-8 h-8 rounded-full bg-red-100 hover:bg-red-200 dark:bg-red-950 dark:hover:bg-red-900 text-red-600 dark:text-red-400 transition-colors shadow-xs hover:scale-105 active:scale-95 duration-150"
+              title="Stop and Attach Voice Message"
+              type="button"
+            >
+              <Square className="w-3.5 h-3.5 shrink-0 fill-current" />
+            </button>
+          </div>
+        ) : (
+          <div className="h-14 px-5 flex items-center gap-3">
+            <input
+              type="file"
+              ref={fileInputRef}
+              onChange={handleFileChange}
+              accept="image/*,video/*,audio/*"
+              className="hidden"
+            />
+            <button
+              onClick={() => fileInputRef.current?.click()}
+              disabled={isStreaming}
+              className="text-zinc-500 hover:text-blue-500 disabled:text-zinc-350 dark:disabled:text-stone-800 transition-colors p-1"
+              title="Attach Screen Recording, Screenshot, or Audio"
+              type="button"
+            >
+              <Paperclip className="w-5 h-5 shrink-0" />
+            </button>
+            <button
+              onClick={startRecording}
+              disabled={isStreaming}
+              className="text-zinc-500 hover:text-red-500 disabled:text-zinc-350 dark:disabled:text-stone-800 transition-colors p-1"
+              title="Record Voice Message"
+              type="button"
+            >
+              <Mic className="w-5 h-5 shrink-0" />
+            </button>
+            <input
+              value={input}
+              onChange={e => setInput(e.target.value)}
+              onKeyDown={e => e.key === 'Enter' && handleSend()}
+              placeholder={isStreaming ? 'Agent is thinking...' : t('describeTask') || 'Describe a task...'}
+              disabled={isStreaming}
+              className="min-w-0 flex-1 bg-transparent text-[15px] font-semibold text-zinc-650 dark:text-stone-300 outline-hidden placeholder:text-zinc-400 dark:placeholder:text-stone-600"
+            />
+            <button
+              onClick={() => handleSend()}
+              disabled={isStreaming || (!input.trim() && !attachedFile)}
+              className="text-blue-500 hover:text-blue-600 disabled:text-zinc-200 dark:disabled:text-stone-800 transition-colors"
+              type="button"
+              aria-label="Send message"
+            >
+              <Send className="w-6 h-6 shrink-0" />
+            </button>
+          </div>
+        )}
       </div>
     </div>
   )
