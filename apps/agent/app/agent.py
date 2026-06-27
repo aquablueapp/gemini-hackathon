@@ -31,6 +31,9 @@ import tempfile
 from google.adk.tools import google_search, ToolContext
 from app.tools.code_reader import get_commit_code_outline, get_commit_code_details
 from app.tools.google_slides import read_google_slides, create_google_presentation, write_google_slides
+from app.tools.sentry import query_sentry_issues
+from app.tools.new_relic import query_new_relic_metrics
+from app.tools.improvement_plots import generate_improvement_plots
 
 
 try:
@@ -307,7 +310,7 @@ root_agent = Agent(
         "- Do NOT summarize, shorten, or replace user-specified slide copy with generic filler/lorem-ipsum text. If the user provides a detailed draft list, map every single point into the corresponding slide text frames.\n"
         "- API Payload Construction: Translate user requirements into clean batchUpdate requests (e.g. createSlide, insertText). Ensure you map visual layouts (such as title card vs bullet list slides) to the correct slide layouts or target specific objectIds."
     ),
-    tools=[get_weather, get_current_time, dry_run_script, compile_applet, get_commit_code_outline, get_commit_code_details, read_google_slides, create_google_presentation, write_google_slides],
+    tools=[get_weather, get_current_time, dry_run_script, compile_applet, get_commit_code_outline, get_commit_code_details, read_google_slides, create_google_presentation, write_google_slides, query_sentry_issues, query_new_relic_metrics, generate_improvement_plots],
     before_model_callback=before_model_callback,
 )
 

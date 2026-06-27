@@ -60,37 +60,49 @@ export class GitCacheManager {
   }
 
   static getDiffLines(repoPath: string, commitSha: string): Map<string, number[]> {
-    const stdout = execSync(
-      `git --git-dir=${repoPath} show ${commitSha} --unified=0`, 
-      { encoding: 'utf-8' }
-    );
-    
-    const fileModifications = new Map<string, number[]>();
-    let currentFile = '';
+    try {
+      const stdout = execSync(
+        `git --git-dir=${repoPath} show ${commitSha} --unified=0`, 
+        { encoding: 'utf-8', stdio: ['pipe', 'pipe', 'ignore'] }
+      );
+      
+      const fileModifications = new Map<string, number[]>();
+      let currentFile = '';
 
-    const lines = stdout.split('\n');
-    for (const line of lines) {
-      if (line.startsWith('+++ b/')) {
-        currentFile = line.substring(6);
-        fileModifications.set(currentFile, []);
-      } else if (line.startsWith('@@ ') && currentFile) {
-        const match = line.match(/@@ -\d+(?:,\d+)? \+(\d+)(?:,(\d+))? @@/);
-        if (match) {
-          const start = parseInt(match[1], 10);
-          const count = match[2] ? parseInt(match[2], 10) : 1;
-          for (let i = 0; i < count; i++) {
-            fileModifications.get(currentFile)!.push(start + i);
+      const lines = stdout.split('\n');
+      for (const line of lines) {
+        if (line.startsWith('+++ b/')) {
+          currentFile = line.substring(6);
+          fileModifications.set(currentFile, []);
+        } else if (line.startsWith('@@ ') && currentFile) {
+          const match = line.match(/@@ -\d+(?:,\d+)? \+(\d+)(?:,(\d+))? @@/);
+          if (match) {
+            const start = parseInt(match[1], 10);
+            const count = match[2] ? parseInt(match[2], 10) : 1;
+            for (let i = 0; i < count; i++) {
+              fileModifications.get(currentFile)!.push(start + i);
+            }
           }
         }
       }
+      return fileModifications;
+    } catch (err) {
+      const wrappedErr = new Error(`Git show failed for commit ${commitSha}: ${err instanceof Error ? err.message : String(err)}`);
+      (wrappedErr as any).status = 404;
+      throw wrappedErr;
     }
-    return fileModifications;
   }
 
   static getFileContent(repoPath: string, commitSha: string, filePath: string): string {
-    return execSync(
-      `git --git-dir=${repoPath} show ${commitSha}:${filePath}`, 
-      { encoding: 'utf-8' }
-    );
+    try {
+      return execSync(
+        `git --git-dir=${repoPath} show ${commitSha}:${filePath}`, 
+        { encoding: 'utf-8', stdio: ['pipe', 'pipe', 'ignore'] }
+      );
+    } catch (err) {
+      const wrappedErr = new Error(`Git show failed for file ${filePath} at commit ${commitSha}: ${err instanceof Error ? err.message : String(err)}`);
+      (wrappedErr as any).status = 404;
+      throw wrappedErr;
+    }
   }
 }

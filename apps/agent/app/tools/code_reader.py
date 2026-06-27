@@ -29,9 +29,14 @@ async def get_commit_code_outline(
         "commit_sha": commit_sha
     }
     async with httpx.AsyncClient() as client:
-        response = await client.post(url, json=payload, timeout=30.0)
-        response.raise_for_status()
-        return response.json()
+        try:
+            response = await client.post(url, json=payload, timeout=30.0)
+            response.raise_for_status()
+            return response.json()
+        except httpx.HTTPStatusError as e:
+            return {"error": f"Failed to get outline: {e.response.status_code} - {e.response.text}"}
+        except Exception as e:
+            return {"error": f"Failed to get outline: {str(e)}"}
 
 async def get_commit_code_details(
     owner: str, 
@@ -61,7 +66,11 @@ async def get_commit_code_details(
         "targets": targets
     }
     async with httpx.AsyncClient() as client:
-        response = await client.post(url, json=payload, timeout=30.0)
-        response.raise_for_status()
-        return response.json()
-
+        try:
+            response = await client.post(url, json=payload, timeout=30.0)
+            response.raise_for_status()
+            return response.json()
+        except httpx.HTTPStatusError as e:
+            return {"error": f"Failed to get details: {e.response.status_code} - {e.response.text}"}
+        except Exception as e:
+            return {"error": f"Failed to get details: {str(e)}"}
