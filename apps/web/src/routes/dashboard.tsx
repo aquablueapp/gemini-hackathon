@@ -12,6 +12,8 @@ import {
   Terminal,
   UserPlus,
   X,
+  Mic,
+  Square,
 } from 'lucide-react'
 import * as React from 'react'
 import { useTranslations } from 'use-intl'
@@ -255,15 +257,39 @@ export function DashboardPage() {
   const [input, setInput] = React.useState('')
   const [isStreaming, setIsStreaming] = React.useState(false)
   const [localSessions, setLocalSessions] = React.useState<{ id: string, label: string }[]>([])
-  const [selectedModel, setSelectedModel] = React.useState('gemini-omni')
+  const [selectedModel, setSelectedModel] = React.useState(DEFAULT_MODEL_ID)
   const fileInputRef = React.useRef<HTMLInputElement>(null)
   const [attachedFile, setAttachedFile] = React.useState<{ base64: string, mimeType: string, name: string } | null>(null)
+
+  // Voice recording states
+  const [isRecording, setIsRecording] = React.useState(false)
+  const [recordingSeconds, setRecordingSeconds] = React.useState(0)
+  const mediaRecorderRef = React.useRef<MediaRecorder | null>(null)
+  const audioChunksRef = React.useRef<Blob[]>([])
+  const recordingTimerRef = React.useRef<any>(null)
+
+  React.useEffect(() => {
+    return () => {
+      if (recordingTimerRef.current) {
+        clearInterval(recordingTimerRef.current)
+      }
+      if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
+        try {
+          // Stop all audio tracks from the stream
+          mediaRecorderRef.current.stream.getTracks().forEach(track => track.stop())
+        } catch (e) {
+          console.error('Failed to cleanup recording stream:', e)
+        }
+      }
+    }
+  }, [])
 
   // Tool & Agent Thinking States
   const [thinkingLogs, setThinkingLogs] = React.useState<string[]>([])
   const [isThinking, setIsThinking] = React.useState(false)
   const [thinkingDuration, setThinkingDuration] = React.useState(0)
   const [activeModelMsgId, setActiveModelMsgId] = React.useState<string | null>(null)
+  const [abortController, setAbortController] = React.useState<AbortController | null>(null)
 
   React.useEffect(() => {
     let interval: any
@@ -287,6 +313,40 @@ export function DashboardPage() {
   const [terminalError, setTerminalError] = React.useState<string | null>(null)
   const [reportResult, setReportResult] = React.useState<Record<string, unknown> | null>(null)
   const [activeTerminalTab, setActiveTerminalTab] = React.useState<'logs' | 'analytics'>('logs')
+
+  const [activeCredentials, setActiveCredentials] = React.useState<string[]>([])
+  
+  const refreshCredentials = React.useCallback(async () => {
+    try {
+      const API_BASE_URL = getApiBaseUrl()
+      const res = await fetch(`${API_BASE_URL}/credentials`)
+      if (res.ok) {
+        const data = await res.json()
+        setActiveCredentials(data)
+      }
+    } catch (err) {
+      console.error("Failed to load credentials", err)
+    }
+  }, [])
+  
+  React.useEffect(() => {
+    refreshCredentials()
+  }, [refreshCredentials])
+
+  React.useEffect(() => {
+    const params = new URLSearchParams(window.location.search)
+    if (params.get('auth_success') === 'google') {
+      params.delete('auth_success')
+      const newQuery = params.toString()
+      window.history.replaceState(
+        {},
+        '',
+        `${window.location.pathname}${newQuery ? `?${newQuery}` : ''}`
+      )
+      refreshCredentials()
+      alert("✅ Successfully connected to Google Slides!")
+    }
+  }, [refreshCredentials])
 
   const timelineEndRef = React.useRef<HTMLDivElement>(null)
   const terminalEndRef = React.useRef<HTMLDivElement>(null)
@@ -573,6 +633,90 @@ export function DashboardPage() {
     reader.readAsDataURL(file)
   }
 
+  const startRecording = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
+      audioChunksRef.current = []
+      
+      const options = { mimeType: 'audio/webm' }
+      let mediaRecorder: MediaRecorder
+      try {
+        mediaRecorder = new MediaRecorder(stream, options)
+      } catch (e) {
+        // Fallback for Safari and browsers not fully supporting webm
+        mediaRecorder = new MediaRecorder(stream)
+      }
+
+      mediaRecorderRef.current = mediaRecorder
+      
+      mediaRecorder.ondataavailable = (event) => {
+        if (event.data.size > 0) {
+          audioChunksRef.current.push(event.data)
+        }
+      }
+
+      mediaRecorder.onstop = () => {
+        const rawMimeType = mediaRecorder.mimeType || 'audio/webm'
+        const cleanMimeType = rawMimeType.split(';')[0]
+        const audioBlob = new Blob(audioChunksRef.current, { type: cleanMimeType })
+        
+        // Stop all tracks to release mic
+        stream.getTracks().forEach(track => track.stop())
+
+        const reader = new FileReader()
+        reader.onloadend = () => {
+          const base64Result = reader.result as string
+          const commaIdx = base64Result.indexOf(',')
+          if (commaIdx !== -1) {
+            const base64 = base64Result.substring(commaIdx + 1)
+            setAttachedFile({
+              base64,
+              mimeType: cleanMimeType,
+              name: `voice-recording-${Date.now()}.${cleanMimeType.split('/')[1] || 'webm'}`,
+            })
+          }
+        }
+        reader.readAsDataURL(audioBlob)
+      }
+
+      mediaRecorder.start()
+      setIsRecording(true)
+      setRecordingSeconds(0)
+
+      recordingTimerRef.current = setInterval(() => {
+        setRecordingSeconds(prev => prev + 1)
+      }, 1000)
+    } catch (err) {
+      console.error('Failed to start voice recording:', err)
+      alert('Could not access microphone. Please check your browser permissions.')
+    }
+  }
+
+  const stopRecording = () => {
+    if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
+      mediaRecorderRef.current.stop()
+    }
+    if (recordingTimerRef.current) {
+      clearInterval(recordingTimerRef.current)
+      recordingTimerRef.current = null
+    }
+    setIsRecording(false)
+  }
+
+  const toggleRecording = () => {
+    if (isRecording) {
+      stopRecording()
+    } else {
+      startRecording()
+    }
+  }
+
+  const formatRecordingTime = (secs: number) => {
+    const minutes = Math.floor(secs / 60)
+    const seconds = secs % 60
+    return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`
+  }
+
   // ----------------------------------------------------
   // LOGIC: AI Chat Execution
   // ----------------------------------------------------
@@ -619,6 +763,8 @@ export function DashboardPage() {
     const modelMsgId = `model_${Date.now()}`
     setMessages(prev => [...prev, { id: modelMsgId, role: 'model', content: '' }])
     setActiveModelMsgId(modelMsgId)
+    const controller = new AbortController()
+    setAbortController(controller)
 
     try {
       const API_BASE_URL = getApiBaseUrl()
@@ -627,6 +773,7 @@ export function DashboardPage() {
         headers: {
           'Content-Type': 'application/json',
         },
+        signal: controller.signal,
         body: JSON.stringify({
           message: finalMessageText,
           sessionId,
@@ -770,12 +917,12 @@ export function DashboardPage() {
         ]
       }
 
-      setMessages(prev =>
+setMessages(prev =>
         prev.map(msg =>
           msg.id === modelMsgId
             ? {
                 ...msg,
-                content: fullModelText || 'Done processing.',
+                content: fullModelText || (isCompiledSuccessfully ? 'Successfully compiled applet.' : 'Error: Empty response from AI Agent. Please check backend logs.'),
                 affectedItems: detectedAffectedItems,
                 isCompiled: isCompiledSuccessfully,
               }
@@ -787,8 +934,19 @@ export function DashboardPage() {
       if (isCompiledSuccessfully) {
         queryClient.invalidateQueries({ queryKey: ['applets'] })
       }
+
+      // Automatically confirm and compile if dry-run items were detected and not compiled yet
+      if (detectedAffectedItems && !isCompiledSuccessfully) {
+        setTimeout(() => {
+          handleConfirmAction()
+        }, 100)
+      }
     }
-    catch (err) {
+    catch (err: any) {
+      if (err.name === 'AbortError') {
+        console.log('Stream request aborted.')
+        return
+      }
       console.error(err)
       setIsThinking(false)
       setMessages(prev =>
@@ -803,6 +961,7 @@ export function DashboardPage() {
       setIsStreaming(false)
       setIsThinking(false)
       setActiveModelMsgId(null)
+      setAbortController(null)
     }
   }
 
@@ -822,6 +981,27 @@ export function DashboardPage() {
 
   const handleConfirmAction = () => {
     handleSend('Confirm the action and compile this python script into a static Applet.')
+  }
+
+  const handleAbort = () => {
+    if (abortController) {
+      abortController.abort()
+      setAbortController(null)
+    }
+    setIsStreaming(false)
+    setIsThinking(false)
+    if (activeModelMsgId) {
+      setMessages(prev =>
+        prev.map(msg =>
+          msg.id === activeModelMsgId
+            ? {
+                ...msg,
+                content: (msg.content && msg.content !== 'Thinking...' ? msg.content + '\n\n' : '') + '🛑 Task execution force-stopped by user.',
+              }
+            : msg,
+        ),
+      )
+    }
   }
 
   const handleNewEmployee = () => {
@@ -935,7 +1115,8 @@ export function DashboardPage() {
         </div>
 
         {/* Model Selector Dropdown from Google I/O 2026 */}
-        <div className="flex items-center gap-2 shrink-0">
+        <div className="flex items-center gap-3 shrink-0">
+
           <label htmlFor="model-select" className="text-xs font-bold text-stone-400 dark:text-stone-500 select-none">Model:</label>
           <select
             id="model-select"
@@ -943,12 +1124,12 @@ export function DashboardPage() {
             onChange={(e) => setSelectedModel(e.target.value)}
             className="text-xs font-bold bg-[#eef6ff] dark:bg-[#1b2b3c] text-stone-700 dark:text-stone-200 rounded-xl px-3 py-1.5 border-0 focus:outline-none focus:ring-1 focus:ring-blue-500 cursor-pointer shadow-xs select-none transition-colors"
           >
-            <option value="gemini-3.5-flash">Gemini 3.5 Flash (Medium) ⭐</option>
-            <option value="gemini-3.5-pro">Gemini 3.5 Pro (Large) 🔥</option>
-            <option value="gemini-omni">Gemini Omni ✨</option>
+            <option value="gemini-3.5-flash">Gemini 3.5 Flash ⭐</option>
+            <option value="gemini-3.5-pro">Gemini 3.5 Pro 🔥</option>
+            <option value="gemini-2.0-flash-thinking">Gemini 2.0 Thinking 🧠</option>
             <option value="gemini-2.5-flash">Gemini 2.5 Flash</option>
             <option value="gemini-2.5-pro">Gemini 2.5 Pro</option>
-            <option value="gemini-2.0-flash-thinking">Gemini 2.0 Thinking</option>
+            <option value="gemini-2.0-flash">Gemini 2.0 Flash ⚡</option>
           </select>
         </div>
       </div>
@@ -985,34 +1166,7 @@ export function DashboardPage() {
               )}
             </div>
 
-            {msg.affectedItems && (
-              <div className="mt-3 w-full bg-white dark:bg-[#131d28] border border-[#d9e1e8] dark:border-[#223145] rounded-xl p-4 shadow-sm animate-in zoom-in-95 duration-200">
-                <h4 className="text-sm font-bold text-stone-700 dark:text-stone-300 mb-2 flex items-center gap-1.5">
-                  <Play className="w-3.5 h-3.5 text-amber-500 fill-current" />
-                  Dry-Run Preview (Affected Data List)
-                </h4>
-                <p className="text-xs text-stone-500 mb-3">
-                  The Python script successfully simulated execution. Confirming will compile this applet for production.
-                </p>
-                <div className="bg-stone-50 dark:bg-stone-950 p-3 rounded-lg border border-stone-150 dark:border-stone-850 flex flex-col gap-2 font-mono text-xs text-stone-600 dark:text-stone-400">
-                  {msg.affectedItems.map((item, idx) => (
-                    <div key={idx} className="flex items-center gap-2">
-                      <span className="text-amber-500">▶</span>
-                      <span>{item}</span>
-                    </div>
-                  ))}
-                </div>
-                <div className="mt-3 flex gap-2 justify-end">
-                  <Button
-                    onClick={handleConfirmAction}
-                    size="sm"
-                    className="text-sm bg-gradient-to-b from-[#6ca7ff] to-[#4384e7] hover:opacity-90 text-white font-bold"
-                  >
-                    Confirm Action
-                  </Button>
-                </div>
-              </div>
-            )}
+
 
             {msg.isCompiled && (
               <div className="mt-3 w-full bg-emerald-50/50 dark:bg-emerald-950/20 border border-emerald-200 dark:border-emerald-900/30 rounded-xl p-4 shadow-sm flex items-start gap-3">
@@ -1054,6 +1208,10 @@ export function DashboardPage() {
                   </div>
                   <video src={`data:${attachedFile.mimeType};base64,${attachedFile.base64}`} className="w-full h-full object-cover" />
                 </div>
+              ) : attachedFile.mimeType.startsWith('audio/') ? (
+                <div className="w-9 h-9 rounded-lg border border-[#d9e1e8] dark:border-[#223145] bg-red-100 dark:bg-red-950 shrink-0 flex items-center justify-center text-red-500">
+                  <Mic className="w-4 h-4" />
+                </div>
               ) : (
                 <div className="w-9 h-9 rounded-lg border border-[#d9e1e8] dark:border-[#223145] bg-blue-100 dark:bg-blue-950 shrink-0 flex items-center justify-center text-blue-500">
                   <Paperclip className="w-4 h-4" />
@@ -1084,30 +1242,59 @@ export function DashboardPage() {
           />
           <button
             onClick={() => fileInputRef.current?.click()}
-            disabled={isStreaming}
+            disabled={isStreaming || isRecording}
             className="text-zinc-500 hover:text-blue-500 disabled:text-zinc-350 dark:disabled:text-stone-800 transition-colors p-1"
             title="Attach Screen Recording or Screenshot"
             type="button"
           >
             <Paperclip className="w-5 h-5 shrink-0" />
           </button>
+          <button
+            onClick={toggleRecording}
+            disabled={isStreaming}
+            className={`transition-colors p-1 rounded-full ${
+              isRecording
+                ? 'text-red-500 hover:text-red-600 bg-red-50 dark:bg-red-950/30 animate-pulse'
+                : 'text-zinc-550 hover:text-blue-500 disabled:text-zinc-350 dark:disabled:text-stone-800'
+            }`}
+            title={isRecording ? "Stop voice recording" : "Record voice message"}
+            type="button"
+          >
+            <Mic className="w-5 h-5 shrink-0" />
+          </button>
           <input
-            value={input}
+            value={isRecording ? "" : input}
             onChange={e => setInput(e.target.value)}
             onKeyDown={e => e.key === 'Enter' && handleSend()}
-            placeholder={isStreaming ? 'Agent is thinking...' : t('describeTask') || 'Describe a task...'}
-            disabled={isStreaming}
+            placeholder={
+              isRecording
+                ? `Recording voice (${formatRecordingTime(recordingSeconds)})... Click Mic to stop`
+                : (isStreaming ? 'Agent is thinking...' : t('describeTask') || 'Describe a task...')
+            }
+            disabled={isStreaming || isRecording}
             className="min-w-0 flex-1 bg-transparent text-[15px] font-semibold text-zinc-650 dark:text-stone-300 outline-hidden placeholder:text-zinc-400 dark:placeholder:text-stone-600"
           />
-          <button
-            onClick={() => handleSend()}
-            disabled={isStreaming || (!input.trim() && !attachedFile)}
-            className="text-blue-500 hover:text-blue-600 disabled:text-zinc-200 dark:disabled:text-stone-800 transition-colors"
-            type="button"
-            aria-label="Send message"
-          >
-            <Send className="w-6 h-6 shrink-0" />
-          </button>
+          {isStreaming ? (
+            <button
+              onClick={handleAbort}
+              className="text-red-500 hover:text-red-650 transition-colors p-1"
+              type="button"
+              aria-label="Stop task"
+              title="Force Stop Task"
+            >
+              <Square className="w-5 h-5 shrink-0 fill-current" />
+            </button>
+          ) : (
+            <button
+              onClick={() => handleSend()}
+              disabled={isStreaming || isRecording || (!input.trim() && !attachedFile)}
+              className="text-blue-500 hover:text-blue-600 disabled:text-zinc-200 dark:disabled:text-stone-800 transition-colors"
+              type="button"
+              aria-label="Send message"
+            >
+              <Send className="w-6 h-6 shrink-0" />
+            </button>
+          )}
         </div>
       </div>
     </div>

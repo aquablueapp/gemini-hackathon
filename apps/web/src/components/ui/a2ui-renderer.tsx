@@ -142,6 +142,43 @@ export const A2uiRenderer: React.FC<{ payload: string | object }> = ({ payload }
         )
       }
 
+      case 'GoogleOAuth': {
+        const { title, description } = node.props || {}
+        return (
+          <div
+            key={index}
+            className="my-3 p-5 rounded-2xl border border-stone-200/85 bg-white/75 shadow-xs dark:border-stone-800/60 dark:bg-stone-950/60 backdrop-blur-xs text-left"
+          >
+            <div className="flex items-center gap-2 mb-2">
+              <span className="inline-flex h-6 w-6 items-center justify-center rounded-lg bg-amber-50 dark:bg-amber-950/30 text-amber-600 dark:text-amber-400">
+                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+                </svg>
+              </span>
+              <h4 className="text-sm font-bold text-stone-900 dark:text-stone-50">
+                {title || 'Google Slides Access Required'}
+              </h4>
+            </div>
+            <p className="text-xs text-stone-500 dark:text-stone-400 leading-relaxed mb-4">
+              {description || 'To create or edit presentation slides, please authorize access to your Google Slides account via Google OAuth 2.0.'}
+            </p>
+            <button
+              onClick={() => {
+                const API_BASE_URL = getApiBaseUrl()
+                window.location.href = `${API_BASE_URL}/auth/google`
+              }}
+              className="h-9 px-4 rounded-lg bg-amber-500 hover:bg-amber-600 text-white text-xs font-semibold shadow-2xs transition-all cursor-pointer inline-flex items-center gap-1.5"
+              type="button"
+            >
+              <svg className="w-3 h-3" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M12.24 10.285V14.4h6.887c-.648 2.41-2.519 4.114-6.887 4.114-4.694 0-8.503-3.809-8.503-8.503s3.809-8.503 8.503-8.503c2.083 0 3.978.778 5.428 2.227l3.12-3.12C18.17 1.83 15.394 1 12.24 1 5.922 1 1 5.922 1 12.24s4.922 11.24 11.24 11.24c6.302 0 11.24-4.938 11.24-11.24 0-.756-.09-1.503-.255-2.227H12.24z"/>
+              </svg>
+              Connect Google Slides
+            </button>
+          </div>
+        )
+      }
+
       case 'Card': {
         const { title, description, badge } = node.props || {}
         return (

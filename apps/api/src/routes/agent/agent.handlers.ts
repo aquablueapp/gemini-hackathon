@@ -57,9 +57,10 @@ export const chatHandler: AppRouteHandler<ChatRoute> = async (c) => {
   const agentApiUrl = process.env.AGENT_API_URL || 'http://127.0.0.1:7668'
   const parts: any[] = [{ text: message }]
   if (file && file.base64 && file.mimeType) {
+    const cleanMimeType = file.mimeType.split(';')[0]
     parts.push({
       inline_data: {
-        mime_type: file.mimeType,
+        mime_type: cleanMimeType,
         data: file.base64,
       }
     })

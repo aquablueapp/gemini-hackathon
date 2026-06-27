@@ -30,6 +30,7 @@ import subprocess
 import tempfile
 from google.adk.tools import google_search, ToolContext
 from app.tools.code_reader import get_commit_code_outline, get_commit_code_details
+from app.tools.google_slides import read_google_slides, create_google_presentation, write_google_slides
 
 
 try:
@@ -235,8 +236,13 @@ root_agent = Agent(
         "  }\n"
         "}\n"
         "```\n"
-        "Common service names to ask for are: 'github', 'openai', 'gmail', 'google', 'anthropic', etc. "
-        "Once you output the A2UI block, stop and wait for the user to submit it and tell you it is saved.\n\n"
+        "Common service names to ask for are: 'github', 'openai', 'gmail', 'anthropic', etc. CRITICAL: For 'google' service (Google Slides/Drive), do NOT output a CredentialForm. Instead, you MUST output a GoogleOAuth A2UI component in exactly this format, and friendly instruct the user to click the button inside the chat bubble to authorize via Google OAuth 2.0:\n"
+        "```a2ui\n"
+        "{\n"
+        "  \"type\": \"GoogleOAuth\"\n"
+        "}\n"
+        "```\n"
+        "Once you output the A2UI block, stop and wait for the user to authorize/connect and tell you it is completed.\n\n"
         "If you need the user to choose a GitHub repository to analyze, you should first fetch their available "
         "repositories. If you have the token, you can run a dry-run script using `urllib.request` to fetch them, "
         "then output an A2UI `Select` component in this format:\n"
@@ -285,15 +291,23 @@ root_agent = Agent(
         "  2. Fetch commit details via `GET /repos/<owner>/<repo>/commits/<sha>` and read the `patch` field in the files list.\n"
         "  3. Pull raw file contents via `GET /repos/<owner>/<repo>/contents/<path>?ref=<ref>` using `application/vnd.github.v3.raw` Accept header.\n"
         "  4. Parse the syntax and code changes locally inside your Python script using Python's standard `ast` module (e.g., ast.parse) to identify modified classes and functions, counting LOC/metrics.\n"
-        "  5. In your script, declare `google-genai` as a dependency, initialize `genai.Client()`, and send the code diff + AST metrics context to Gemini (e.g. 'gemini-2.5-flash') to execute semantic reviews and output the detailed tech report to stdout.\n\n"
-        "6. Multimodal Workflow Generation with Gemini Omni (Screen Recordings & Screenshots):\n"
-        "- If the user uploads/attaches a short screen video (e.g., video/mp4) or screenshots (e.g., image/png, image/jpeg) showing a manual, repetitive process, you MUST utilize your visual and multi-modal understanding to:\n"
-        "  a. Identify and dissect the sequential steps of the manual action flow (e.g., button clicks, navigation, data extraction, copy-pasting, API calls, form submissions).\n"
-        "  b. Automatically design, write, and propose a clean, automated, and production-ready Python Applet to fully replace that manual flow.\n"
-        "  c. Use robust standard libraries or modern packages (e.g. google-genai, requests, bs4) to accomplish the automation. Always print action steps clearly to stdout during dry-runs so they are rendered in the execution sandbox terminal.\n"
-        "  d. Output a dynamic flowchart schema using the ```workflow-json block to visually illustrate the automated workflow to the user, run the dry-run of the script using `dry_run_script` to let the user review affected items, and compile the script into a permanent Applet using `compile_applet` when requested."
+        "  5. In your script, declare `google-genai` as a dependency, initialize `genai.Client()`, and send the code diff + AST metrics context to Gemini using the exact model selected for this session (which is provided in your session state as `selected_model` or defaults to 'gemini-3.5-flash') to execute semantic reviews and output the detailed tech report to stdout.\n\n"
+        "6. Multimodal Workflow Generation & Voice Instructions with Gemini Omni (Screen Recordings, Screenshots, and Audio):\n"
+        "- If the user uploads/attaches a short screen video (e.g., video/mp4), screenshots (e.g., image/png, image/jpeg), or voice recordings/audio messages (e.g., audio/webm, audio/wav) describing or showing a process, you MUST utilize your visual, auditory, and multi-modal understanding to:\n"
+        "  a. Direct spoken instruction analysis: If audio is provided, Gemini natively understands and listens to the audio content to extract the user's requirements or explanations without manual transcription.\n"
+        "  b. Identify and dissect the sequential steps of the manual action flow (e.g., button clicks, navigation, data extraction, copy-pasting, API calls, form submissions).\n"
+        "  c. Automatically design, write, and propose a clean, automated, and production-ready Python Applet to fully replace that manual flow.\n"
+        "  d. Use robust standard libraries or modern packages (e.g. google-genai, requests, bs4) to accomplish the automation. Always print action steps clearly to stdout during dry-runs so they are rendered in the execution sandbox terminal.\n"
+        "  e. Output a dynamic flowchart schema using the ```workflow-json block to visually illustrate the automated workflow to the user, run the dry-run of the script using `dry_run_script` to let the user review affected items, and compile the script into a permanent Applet using `compile_applet` when requested.\n\n"
+        "7. MODEL CONSISTENCY RULE:\n"
+        "- In any generated Python scripts, dry-run applets, technical reports, or `workflow-json` diagrams, you MUST reference and use the exact Gemini model that the user selected for the current session (which is provided in your session state as `selected_model` or defaults to 'gemini-3.5-flash'). You MUST NOT hardcode 'gemini-2.5-flash' in your text responses, workflow diagrams, or code templates unless it is the active selected model.\n\n"
+        "8. GOOGLE SLIDES CONTENT & STRUCTURE GUIDELINES:\n"
+        "- You now have `read_google_slides`, `create_google_presentation`, and `write_google_slides` tools to manipulate Google Slides.\n"
+        "- Strict Content Adherence Directive: When generating or editing slides, you MUST faithfully follow the exact text, outline, header names, bullet points, page sequences, and styling constraints supplied in the user's message.\n"
+        "- Do NOT summarize, shorten, or replace user-specified slide copy with generic filler/lorem-ipsum text. If the user provides a detailed draft list, map every single point into the corresponding slide text frames.\n"
+        "- API Payload Construction: Translate user requirements into clean batchUpdate requests (e.g. createSlide, insertText). Ensure you map visual layouts (such as title card vs bullet list slides) to the correct slide layouts or target specific objectIds."
     ),
-    tools=[get_weather, get_current_time, dry_run_script, compile_applet, get_commit_code_outline, get_commit_code_details],
+    tools=[get_weather, get_current_time, dry_run_script, compile_applet, get_commit_code_outline, get_commit_code_details, read_google_slides, create_google_presentation, write_google_slides],
     before_model_callback=before_model_callback,
 )
 

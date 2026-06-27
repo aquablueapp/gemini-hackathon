@@ -17,3 +17,7 @@ __pycache__/
 *.pyc
 logs/
 .adk/
+
+# User custom local configs
+example_message
+token

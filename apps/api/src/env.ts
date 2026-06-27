@@ -22,6 +22,10 @@ const EnvSchema = z.object({
 
   // JWKS 内存缓存 TTL（秒）
   JWKS_CACHE_TTL_SECONDS: z.coerce.number().min(60).max(86400).optional().default(3600),
+
+  // Google OAuth Credentials (Optional for Slides Auth)
+  GOOGLE_CLIENT_ID: z.string().optional(),
+  GOOGLE_CLIENT_SECRET: z.string().optional(),
 })
   .superRefine((input, ctx) => {
     if (input.NODE_ENV === 'production') {

@@ -94,6 +94,12 @@ stop_all() {
 }
 
 start_all() {
+  # Load API env variables so they propagate to Hono and Python Agent subprocesses
+  if [ -f apps/api/.env ]; then
+    echo -e "${YELLOW}Loading environment variables from apps/api/.env...${NC}"
+    export $(grep -v '^#' apps/api/.env | grep -v '^[[:space:]]*$' | xargs)
+  fi
+
   # 1. Verification
   echo -e "${CYAN}Checking prerequisites...${NC}"
   if ! command -v bun &> /dev/null; then
