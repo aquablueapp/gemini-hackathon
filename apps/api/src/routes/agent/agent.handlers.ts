@@ -6,7 +6,7 @@ import { getFirestore } from '@/db/firestore'
 import { decrypt } from '@/services/credentials'
 
 export const chatHandler: AppRouteHandler<ChatRoute> = async (c) => {
-  const { message, sessionId, model } = c.req.valid('json')
+  const { message, sessionId, model, file } = c.req.valid('json')
 
   const firestore = getFirestore()
   try {
@@ -55,13 +55,23 @@ export const chatHandler: AppRouteHandler<ChatRoute> = async (c) => {
   }
 
   const agentApiUrl = process.env.AGENT_API_URL || 'http://127.0.0.1:7668'
+  const parts: any[] = [{ text: message }]
+  if (file && file.base64 && file.mimeType) {
+    parts.push({
+      inline_data: {
+        mime_type: file.mimeType,
+        data: file.base64,
+      }
+    })
+  }
+
   const payload = {
     app_name: 'app',
     user_id: 'default_user',
     session_id: sessionId,
     new_message: {
       role: 'user',
-      parts: [{ text: message }],
+      parts,
     },
     streaming: true,
     state_delta: stateDelta,
