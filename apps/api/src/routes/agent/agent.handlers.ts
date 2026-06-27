@@ -41,9 +41,15 @@ export const chatHandler: AppRouteHandler<ChatRoute> = async (c) => {
     console.error('Failed to retrieve user credentials for agent payload:', err)
   }
 
-  // Fallback to process.env.GITHUB_TOKEN if database credential is missing
-  if (!userCredentials.github && process.env.GITHUB_TOKEN) {
-    userCredentials.github = process.env.GITHUB_TOKEN
+  // If github token exists in userCredentials, delete it from database to prevent caching
+  if (userCredentials.github) {
+    try {
+      const docId = `default_user:github`
+      await firestore.collection('user_credentials').doc(docId).delete()
+    }
+    catch (delErr) {
+      console.error('Failed to clean up github credential after read:', delErr)
+    }
   }
 
 

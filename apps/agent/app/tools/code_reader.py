@@ -19,7 +19,7 @@ async def get_commit_code_outline(
         commit_sha: Commit 唯一哈希
     """
     user_creds = tool_context.state.get("user_credentials", {}) if tool_context else {}
-    github_token = user_creds.get("github") or os.getenv("GITHUB_TOKEN") or ""
+    github_token = user_creds.get("github") or ""
     
     url = f"{API_BASE_URL}/ast/outline"
     payload = {
@@ -55,7 +55,7 @@ async def get_commit_code_details(
         targets: 目标列表，格式如 [{"file_path": "apps/api/src/server.ts", "name": "startServer"}]
     """
     user_creds = tool_context.state.get("user_credentials", {}) if tool_context else {}
-    github_token = user_creds.get("github") or os.getenv("GITHUB_TOKEN") or ""
+    github_token = user_creds.get("github") or ""
     
     url = f"{API_BASE_URL}/ast/details"
     payload = {
