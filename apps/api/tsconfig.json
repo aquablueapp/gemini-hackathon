@@ -1,0 +1,43 @@
+{
+  "compilerOptions": {
+    "composite": true,
+    "target": "ESNext",
+    "jsx": "react-jsx",
+    "jsxImportSource": "hono/jsx",
+    "baseUrl": ".",
+    "rootDir": ".",
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "paths": {
+      "@/*": [
+        "./src/*"
+      ]
+    },
+    "typeRoots": [
+      "./node_modules/@types"
+    ],
+    "types": [
+      "node"
+    ],
+    "strict": true,
+    "declaration": true,
+    "outDir": "./dist",
+    "skipLibCheck": true
+  },
+  "composite": true,
+  "include": [
+    "src/**/*.ts",
+    "drizzle.config.ts",
+    "scripts/**/*.ts",
+    "package.json"
+  ],
+  "exclude": [
+    // "**/*.test.ts",
+    "node_modules",
+    "src/db/migrations",
+    "docs"
+  ],
+  "tsc-alias": {
+    "resolveFullPaths": true
+  }
+}

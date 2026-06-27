@@ -1,0 +1,168 @@
+/**
+ * コンポーネント関連の日本語翻訳メッセージ
+ */
+const ERROR_CODES = {
+  AUTH_UNAUTHORIZED: 'AUTH_UNAUTHORIZED',
+  AUTH_FORBIDDEN: 'AUTH_FORBIDDEN',
+  AUTH_INVALID_TOKEN: 'AUTH_INVALID_TOKEN',
+  AUTH_SESSION_EXPIRED: 'AUTH_SESSION_EXPIRED',
+  AUTH_MISSING_SESSION_ID: 'AUTH_MISSING_SESSION_ID',
+  AUTH_SESSION_NOT_FOUND: 'AUTH_SESSION_NOT_FOUND',
+  RESOURCE_NOT_FOUND: 'RESOURCE_NOT_FOUND',
+  RESOURCE_ALREADY_EXISTS: 'RESOURCE_ALREADY_EXISTS',
+  VALIDATION_ERROR: 'VALIDATION_ERROR',
+  VALIDATION_INVALID_UPDATES: 'VALIDATION_INVALID_UPDATES',
+  VALIDATION_REQUIRED: 'VALIDATION_REQUIRED',
+  VALIDATION_INVALID_FORMAT: 'VALIDATION_INVALID_FORMAT',
+  INTERNAL_ERROR: 'INTERNAL_ERROR',
+} as const
+
+const componentsJa = {
+  layout: {
+    header: {
+      features: '機能',
+      useCases: '活用シーン',
+      pricing: '価格',
+      about: 'について',
+      signIn: 'ログイン',
+      getStarted: '始める',
+    },
+    footer: {
+    },
+  },
+  errors: {
+    notFound: {
+      title: '404',
+      description: 'お探しのページは移動したか、存在しない可能性があります。',
+      goHome: 'ホームに戻る',
+      explore: '探索',
+    },
+    unauthorized: {
+      title: '401',
+      description: 'このリソースにアクセスするにはログインが必要です。',
+      goHome: 'ホームに戻る',
+      goBack: '戻る',
+      signIn: 'ログイン',
+    },
+    forbidden: {
+      title: '403',
+      description: 'このリソースにアクセスする権限がありません。',
+      adminOnly: 'このページは管理者のみアクセスできます。',
+      goHome: 'ホームに戻る',
+      goBack: '戻る',
+    },
+    serverError: {
+      title: '500',
+      description: 'サーバーでエラーが発生しました。修正に取り組んでいます。',
+      goHome: 'ホームに戻る',
+      goBack: '戻る',
+      tryAgain: '再試行',
+    },
+    maintenance: {
+      title: '503',
+      description: 'ウェブサイトはメンテナンス中です。すぐに戻ります。',
+      goHome: 'ホームに戻る',
+      learnMore: '詳細を見る',
+    },
+    default: {
+      title: 'エラー',
+      defaultDescription: '予期しないエラーが発生しました。',
+      tryAgain: '再試行',
+      goHome: 'ホーム',
+      goBack: '戻る',
+    },
+    server: {
+      AUTH_UNAUTHORIZED: '未承認。再度ログインしてください。',
+      AUTH_FORBIDDEN: '禁止。この操作を実行する権限がありません。',
+      AUTH_INVALID_TOKEN: '無効な認証トークンです。再度ログインしてください。',
+      AUTH_SESSION_EXPIRED: 'セッションの有効期限が切れました。再度ログインしてください。',
+      AUTH_MISSING_SESSION_ID: 'セッションIDが不足しています。',
+      AUTH_SESSION_NOT_FOUND: 'セッションが見つかりません。再度ログインしてください。',
+      RESOURCE_NOT_FOUND: 'リソースが見つかりません。',
+      RESOURCE_ALREADY_EXISTS: 'リソースは既に存在します。',
+      VALIDATION_ERROR: '検証エラー。入力データを確認してください。',
+      VALIDATION_INVALID_UPDATES: '無効な更新データです。',
+      VALIDATION_REQUIRED: '必須フィールドが不足しています。',
+      VALIDATION_INVALID_FORMAT: '無効な形式です。入力形式を確認してください。',
+      INTERNAL_ERROR: '内部サーバーエラー。後でもう一度お試しください。',
+      unauthorized: '未承認。再度ログインしてください。',
+      forbidden: '禁止。この操作を実行する権限がありません。',
+      notFound: 'リソースが見つかりません。',
+      serverError: '内部サーバーエラー。後でもう一度お試しください。',
+      maintenance: 'サービスは一時的に利用できません。',
+      contentNotFound: 'コンテンツが見つかりません。',
+      default: '問題が発生しました！',
+    },
+  },
+  pending: {
+    title: 'リクエストを処理中',
+    description: 'リクエストを処理しています。しばらくお待ちください。ページを更新しないでください。',
+    cancel: 'キャンセル',
+  },
+  buttons: {
+    cancel: 'キャンセル',
+    confirm: '確認',
+    delete: '削除',
+    close: '閉じる',
+  },
+  table: {
+    searchPlaceholder: '検索...',
+    pagination: {
+      page: '{current}/{total}',
+      pageFull: '{total} ページ中 {current} ページ',
+      rowsPerPage: 'ページ',
+      rowsPerPageFull: 'ページあたりの行数',
+      goToFirstPage: '最初のページに移動',
+      goToPreviousPage: '前のページに移動',
+      goToNextPage: '次のページに移動',
+      goToLastPage: '最後のページに移動',
+      goToPage: '{page} ページに移動',
+    },
+    buttons: {
+      import: 'インポート',
+      create: '作成',
+      search: '検索',
+      reset: 'リセット',
+      view: '表示',
+    },
+  },
+  forms: {
+    validation: {
+      required: 'このフィールドは必須です',
+      email: '有効なメールアドレスを入力してください',
+      minLength: '最低 {min} 文字が必要です',
+      maxLength: '最大 {max} 文字まで入力できます',
+      min: '最小値は {min} より小さくできません',
+      max: '最大値は {max} より大きくできません',
+      pattern: '形式が正しくありません',
+      url: '有効な URL を入力してください',
+      number: '有効な数字を入力してください',
+      integer: '整数を入力してください',
+      positive: '正の数を入力してください',
+      negative: '負の数を入力してください',
+      date: '有効な日付を入力してください',
+      time: '有効な時刻を入力してください',
+      match: '2つの入力が一致しません',
+      unique: 'この値は既に存在します',
+    },
+  },
+  auth: {
+    signIn: {
+      title: 'ログイン',
+      description: 'お帰りなさい',
+    },
+  },
+  api: {
+    errors: {
+      VALIDATION_REQUIRED: 'このフィールドは必須です。',
+      VALIDATION_INVALID_UPDATES: '更新する項目がありません。',
+      VALIDATION_ERROR: 'フォーム検証に失敗しました。',
+      AUTH_UNAUTHORIZED: '先にログインしてください。',
+      AUTH_FORBIDDEN: '権限がありません。',
+      RESOURCE_NOT_FOUND: 'リソースが見つかりません。',
+      INTERNAL_ERROR: '内部サーバーエラー。',
+    },
+  },
+} as const
+
+export default componentsJa

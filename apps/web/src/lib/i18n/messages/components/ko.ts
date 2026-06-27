@@ -1,0 +1,168 @@
+/**
+ * Component-related Korean translation messages
+ */
+const ERROR_CODES = {
+  AUTH_UNAUTHORIZED: 'AUTH_UNAUTHORIZED',
+  AUTH_FORBIDDEN: 'AUTH_FORBIDDEN',
+  AUTH_INVALID_TOKEN: 'AUTH_INVALID_TOKEN',
+  AUTH_SESSION_EXPIRED: 'AUTH_SESSION_EXPIRED',
+  AUTH_MISSING_SESSION_ID: 'AUTH_MISSING_SESSION_ID',
+  AUTH_SESSION_NOT_FOUND: 'AUTH_SESSION_NOT_FOUND',
+  RESOURCE_NOT_FOUND: 'RESOURCE_NOT_FOUND',
+  RESOURCE_ALREADY_EXISTS: 'RESOURCE_ALREADY_EXISTS',
+  VALIDATION_ERROR: 'VALIDATION_ERROR',
+  VALIDATION_INVALID_UPDATES: 'VALIDATION_INVALID_UPDATES',
+  VALIDATION_REQUIRED: 'VALIDATION_REQUIRED',
+  VALIDATION_INVALID_FORMAT: 'VALIDATION_INVALID_FORMAT',
+  INTERNAL_ERROR: 'INTERNAL_ERROR',
+} as const
+
+const componentsKo = {
+  layout: {
+    header: {
+      features: '기능',
+      useCases: '활용 사례',
+      pricing: '요금제',
+      about: '소개',
+      signIn: '로그인',
+      getStarted: '시작하기',
+    },
+    footer: {
+    },
+  },
+  errors: {
+    notFound: {
+      title: '404',
+      description: '찾으시는 페이지가 이동되었거나 존재하지 않습니다.',
+      goHome: '홈으로 이동',
+      explore: '탐색하기',
+    },
+    unauthorized: {
+      title: '401',
+      description: '이 리소스에 접근하려면 로그인이 필요합니다.',
+      goHome: '홈으로 이동',
+      goBack: '뒤로가기',
+      signIn: '로그인',
+    },
+    forbidden: {
+      title: '403',
+      description: '이 리소스에 접근할 권한이 없습니다.',
+      adminOnly: '관리자만 접근할 수 있는 페이지입니다.',
+      goHome: '홈으로 이동',
+      goBack: '뒤로가기',
+    },
+    serverError: {
+      title: '500',
+      description: '서버에 오류가 발생했습니다. 문제를 해결 중입니다.',
+      goHome: '홈으로 이동',
+      goBack: '뒤로가기',
+      tryAgain: '다시 시도하기',
+    },
+    maintenance: {
+      title: '503',
+      description: '사이트 점검 중입니다. 곧 다시 돌아오겠습니다.',
+      goHome: '홈으로 이동',
+      learnMore: '자세히 알아보기',
+    },
+    default: {
+      title: '오류',
+      defaultDescription: '예기치 않은 오류가 발생했습니다.',
+      tryAgain: '다시 시도하기',
+      goHome: '홈',
+      goBack: '뒤로가기',
+    },
+    server: {
+      AUTH_UNAUTHORIZED: '권한이 없습니다. 다시 로그인해 주세요.',
+      AUTH_FORBIDDEN: '접근이 거부되었습니다. 이 작업을 수행할 권한이 없습니다.',
+      AUTH_INVALID_TOKEN: '유효하지 않은 인증 토큰입니다. 다시 로그인해 주세요.',
+      AUTH_SESSION_EXPIRED: '세션이 만료되었습니다. 다시 로그인해 주세요.',
+      AUTH_MISSING_SESSION_ID: '세션 ID가 없습니다.',
+      AUTH_SESSION_NOT_FOUND: '세션을 찾을 수 없습니다. 다시 로그인해 주세요.',
+      RESOURCE_NOT_FOUND: '리소스를 찾을 수 없습니다.',
+      RESOURCE_ALREADY_EXISTS: '리소스가 이미 존재합니다.',
+      VALIDATION_ERROR: '유효성 검사 오류. 입력값을 확인해 주세요.',
+      VALIDATION_INVALID_UPDATES: '잘못된 업데이트 데이터입니다.',
+      VALIDATION_REQUIRED: '필수 필드가 누락되었습니다.',
+      VALIDATION_INVALID_FORMAT: '잘못된 형식입니다. 입력 형식을 확인해 주세요.',
+      INTERNAL_ERROR: '내부 서버 오류. 나중에 다시 시도해 주세요.',
+      unauthorized: '권한이 없습니다. 다시 로그인해 주세요.',
+      forbidden: '접근이 거부되었습니다. 이 작업을 수행할 권한이 없습니다.',
+      notFound: '리소스를 찾을 수 없습니다.',
+      serverError: '내부 서버 오류. 나중에 다시 시도해 주세요.',
+      maintenance: '일시적으로 서비스를 이용할 수 없습니다.',
+      contentNotFound: '콘텐츠를 찾을 수 없습니다.',
+      default: '문제가 발생했습니다!',
+    },
+  },
+  pending: {
+    title: '요청을 처리 중입니다',
+    description: '요청이 처리되는 동안 잠시만 기다려 주세요. 페이지를 새로고침하지 마십시오.',
+    cancel: '취소',
+  },
+  buttons: {
+    cancel: '취소',
+    confirm: '확인',
+    delete: '삭제',
+    close: '닫기',
+  },
+  table: {
+    searchPlaceholder: '검색...',
+    pagination: {
+      page: '{current}/{total}',
+      pageFull: '페이지 {current} / {total}',
+      rowsPerPage: '페이지 당 행',
+      rowsPerPageFull: '페이지 당 행 수',
+      goToFirstPage: '첫 페이지로 이동',
+      goToPreviousPage: '이전 페이지로 이동',
+      goToNextPage: '다음 페이지로 이동',
+      goToLastPage: '마지막 페이지로 이동',
+      goToPage: '{page}페이지로 이동',
+    },
+    buttons: {
+      import: '가져오기',
+      create: '생성하기',
+      search: '검색',
+      reset: '초기화',
+      view: '보기',
+    },
+  },
+  forms: {
+    validation: {
+      required: '이 필드는 필수입니다',
+      email: '유효한 이메일 주소를 입력해 주세요',
+      minLength: '최소 {min}자 이상 입력해야 합니다',
+      maxLength: '최대 {max}자까지 허용됩니다',
+      min: '최소값은 {min}보다 작을 수 없습니다',
+      max: '최대값은 {max}보다 클 수 없습니다',
+      pattern: '형식이 올바르지 않습니다',
+      url: '유효한 URL을 입력해 주세요',
+      number: '숫자만 입력 가능합니다',
+      integer: '정수만 입력 가능합니다',
+      positive: '양수만 입력 가능합니다',
+      negative: '음수만 입력 가능합니다',
+      date: '올바른 날짜를 입력해 주세요',
+      time: '올바른 시간을 입력해 주세요',
+      match: '입력한 값이 일치하지 않습니다',
+      unique: '이미 존재하는 값입니다',
+    },
+  },
+  auth: {
+    signIn: {
+      title: '로그인',
+      description: '다시 오신 것을 환영합니다',
+    },
+  },
+  api: {
+    errors: {
+      VALIDATION_REQUIRED: '이 필드는 필수입니다.',
+      VALIDATION_INVALID_UPDATES: '업데이트할 필드가 없습니다.',
+      VALIDATION_ERROR: '폼 유효성 검증 실패.',
+      AUTH_UNAUTHORIZED: '먼저 로그인해 주세요.',
+      AUTH_FORBIDDEN: '권한이 거부되었습니다.',
+      RESOURCE_NOT_FOUND: '리소스를 찾을 수 없습니다.',
+      INTERNAL_ERROR: '내부 서버 오류입니다.',
+    },
+  },
+} as const
+
+export default componentsKo

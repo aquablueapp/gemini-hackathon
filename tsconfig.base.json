@@ -1,0 +1,21 @@
+{
+    "compilerOptions": {
+      "composite": true, // 启用项目引用，必须设置
+      "declaration": true, // 生成 .d.ts 文件
+      "declarationMap": true, // 生成 .d.ts.map 文件
+      "sourceMap": true,
+      "strict": true,
+      "module": "ESNext",
+      "moduleResolution": "Node",
+      "esModuleInterop": true,
+      "jsx": "react-jsx",
+      "baseUrl": ".", // 重要：设置 baseUrl 为根目录
+      "paths": {     // 重要：用于配置模块路径映射，方便 packages 之间引用
+        "@my-monorepo/*": ["packages/*/src"]
+      },
+      "outDir": "dist", // 默认输出目录，package 可以覆盖
+      "rootDir": "src",  // 默认源码目录，package 可以覆盖
+      "lib": ["ESNext", "DOM", "DOM.Iterable"]
+    },
+    "exclude": ["node_modules", "dist"]
+  }

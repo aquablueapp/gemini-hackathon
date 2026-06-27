@@ -1,0 +1,168 @@
+/**
+ * 组件相关的中文繁体翻译消息
+ */
+const ERROR_CODES = {
+  AUTH_UNAUTHORIZED: 'AUTH_UNAUTHORIZED',
+  AUTH_FORBIDDEN: 'AUTH_FORBIDDEN',
+  AUTH_INVALID_TOKEN: 'AUTH_INVALID_TOKEN',
+  AUTH_SESSION_EXPIRED: 'AUTH_SESSION_EXPIRED',
+  AUTH_MISSING_SESSION_ID: 'AUTH_MISSING_SESSION_ID',
+  AUTH_SESSION_NOT_FOUND: 'AUTH_SESSION_NOT_FOUND',
+  RESOURCE_NOT_FOUND: 'RESOURCE_NOT_FOUND',
+  RESOURCE_ALREADY_EXISTS: 'RESOURCE_ALREADY_EXISTS',
+  VALIDATION_ERROR: 'VALIDATION_ERROR',
+  VALIDATION_INVALID_UPDATES: 'VALIDATION_INVALID_UPDATES',
+  VALIDATION_REQUIRED: 'VALIDATION_REQUIRED',
+  VALIDATION_INVALID_FORMAT: 'VALIDATION_INVALID_FORMAT',
+  INTERNAL_ERROR: 'INTERNAL_ERROR',
+} as const
+
+const componentsZhTw = {
+  layout: {
+    header: {
+      features: '功能',
+      useCases: '使用場景',
+      pricing: '價格',
+      about: '關於',
+      signIn: '登入',
+      getStarted: '開始使用',
+    },
+    footer: {
+    },
+  },
+  errors: {
+    notFound: {
+      title: '404',
+      description: '您訪問的頁面可能已被移動或不存在。',
+      goHome: '返回首頁',
+      explore: '探索',
+    },
+    unauthorized: {
+      title: '401',
+      description: '您需要登入才能訪問此資源。',
+      goHome: '返回首頁',
+      goBack: '返回',
+      signIn: '登入',
+    },
+    forbidden: {
+      title: '403',
+      description: '您沒有權限訪問此資源。',
+      adminOnly: '此頁面僅管理員可訪問。',
+      goHome: '返回首頁',
+      goBack: '返回',
+    },
+    serverError: {
+      title: '500',
+      description: '伺服器發生錯誤，請稍後重試。',
+      goHome: '返回首頁',
+      goBack: 'Go Back',
+      tryAgain: 'Try Again',
+    },
+    maintenance: {
+      title: '503',
+      description: '網站正在維護中，我們將盡快恢復。',
+      goHome: '返回首頁',
+      learnMore: '了解更多',
+    },
+    default: {
+      title: '錯誤',
+      defaultDescription: '發生未知錯誤。',
+      tryAgain: '重試',
+      goHome: '首頁',
+      goBack: '返回',
+    },
+    server: {
+      AUTH_UNAUTHORIZED: '未授權，請重新登入。',
+      AUTH_FORBIDDEN: '禁止存取，您無權執行此操作。',
+      AUTH_INVALID_TOKEN: '無效的認證令牌，請重新登入。',
+      AUTH_SESSION_EXPIRED: '會話已過期，請重新登入。',
+      AUTH_MISSING_SESSION_ID: '缺少會話 ID。',
+      AUTH_SESSION_NOT_FOUND: '未找到會話，請重新登入。',
+      RESOURCE_NOT_FOUND: '資源不存在。',
+      RESOURCE_ALREADY_EXISTS: '資源已存在。',
+      VALIDATION_ERROR: '驗證錯誤，請檢查輸入。',
+      VALIDATION_INVALID_UPDATES: '無效的更新資料。',
+      VALIDATION_REQUIRED: '缺少必填欄位。',
+      VALIDATION_INVALID_FORMAT: '格式無效，請檢查輸入格式。',
+      INTERNAL_ERROR: '伺服器內部錯誤，請稍後重試。',
+      unauthorized: '未授權，請重新登入。',
+      forbidden: '禁止存取，您無權執行此操作。',
+      notFound: '資源不存在。',
+      serverError: 'Internal server error. Please try again later.',
+      maintenance: 'Service temporarily unavailable.',
+      contentNotFound: 'Content not found.',
+      default: '出錯了，請稍後重試。',
+    },
+  },
+  pending: {
+    title: '載入中...',
+    description: '請稍候，我們正在載入資料。',
+    cancel: '取消',
+  },
+  buttons: {
+    cancel: '取消',
+    confirm: '確認',
+    delete: '刪除',
+    close: '關閉',
+  },
+  table: {
+    searchPlaceholder: '搜尋...',
+    pagination: {
+      page: '{current}/{total}',
+      pageFull: '第 {current} 頁，共 {total} 頁',
+      rowsPerPage: '每頁',
+      rowsPerPageFull: '每頁行數',
+      goToFirstPage: '跳轉到第一頁',
+      goToPreviousPage: '跳轉到上一頁',
+      goToNextPage: '跳轉到下一頁',
+      goToLastPage: '跳轉到最後一頁',
+      goToPage: '跳轉到第 {page} 頁',
+    },
+    buttons: {
+      import: '匯入',
+      create: '建立',
+      search: '搜尋',
+      reset: '重置',
+      view: '查看',
+    },
+  },
+  forms: {
+    validation: {
+      required: '此欄位為必填',
+      email: '請輸入有效的郵箱地址',
+      minLength: '至少需要 {min} 個字元',
+      maxLength: '最多允許 {max} 個字元',
+      min: '最小值不能小於 {min}',
+      max: '最大值不能大於 {max}',
+      pattern: '格式不正確',
+      url: '請輸入有效的 URL',
+      number: '請輸入有效的數字',
+      integer: '請輸入整數',
+      positive: '請輸入正數',
+      negative: '請輸入負數',
+      date: '請輸入有效的日期',
+      time: '請輸入有效的時間',
+      match: '兩次輸入不一致',
+      unique: '此值已存在',
+    },
+  },
+  auth: {
+    signIn: {
+      title: '登入',
+      description: '歡迎回來',
+    },
+  },
+  api: {
+    errors: {
+      VALIDATION_REQUIRED: '此欄位為必填',
+      VALIDATION_INVALID_UPDATES: '沒有需要更新的欄位',
+      VALIDATION_ERROR: '表單驗證失敗',
+      AUTH_UNAUTHORIZED: '請先登入',
+      AUTH_FORBIDDEN: '權限不足',
+      RESOURCE_NOT_FOUND: '資源不存在',
+      INTERNAL_ERROR: '伺服器內部錯誤',
+    },
+  },
+} as const
+
+export default componentsZhTw

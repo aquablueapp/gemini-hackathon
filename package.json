@@ -1,0 +1,41 @@
+{
+  "name": "aquablue-monorepo",
+  "version": "1.0.0",
+  "private": true,
+  "engines": {
+    "node": ">=24"
+  },
+  "packageManager": "bun@1.3.10",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "turbo run dev",
+    "dev:web": "turbo run dev --filter=web",
+    "dev:api": "turbo run dev --filter=api",
+    "build": "turbo run build",
+    "build:web": "turbo run build --filter=web",
+    "build:api": "turbo run build --filter=api",
+    "update": "bun update && for dir in apps/*/ packages/*/; do [ -d \"$dir\" ] && (cd \"$dir\" && bun update); done",
+    "lint": "turbo run lint",
+    "test": "turbo run test",
+    "db:seed": "bun --cwd apps/api db:seed",
+    "dev:scraper": "turbo run dev --filter=scraper"
+  },
+  "devDependencies": {
+    "@antfu/eslint-config": "^8.2.0",
+    "eslint": "^9.39.4",
+    "tailwindcss-animate": "^1.0.7",
+    "turbo": "latest",
+    "typescript": "^5.9.3"
+  },
+  "overrides": {
+    "@radix-ui/react-dismissable-layer": "1.1.11",
+    "@radix-ui/react-focus-scope": "1.1.7",
+    "@radix-ui/react-portal": "1.1.9",
+    "@radix-ui/react-slot": "1.2.4",
+    "@radix-ui/react-primitive": "2.1.4",
+    "@radix-ui/react-context": "1.1.3"
+  }
+}

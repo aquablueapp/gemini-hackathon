@@ -1,0 +1,37 @@
+{
+  "eval_set_id": "aquablue_flow_eval",
+  "name": "Aquablue Agent Core Flows",
+  "description": "Evaluation cases for Python script synthesis, sandboxed dry-runs, and credentials checking.",
+  "eval_cases": [
+    {
+      "eval_id": "script_codegen_request",
+      "conversation": [
+        {
+          "user_content": {
+            "parts": [{"text": "Create an automated spam cleanup script in Python that looks for emails from promo@ad.com and deletes them."}]
+          }
+        }
+      ],
+      "session_input": {
+        "app_name": "app",
+        "user_id": "eval_user",
+        "state": {}
+      }
+    },
+    {
+      "eval_id": "missing_gmail_credentials_prompt",
+      "conversation": [
+        {
+          "user_content": {
+            "parts": [{"text": "I want to deploy my automated email cleaner applet, but I haven't added my Gmail credentials yet."}]
+          }
+        }
+      ],
+      "session_input": {
+        "app_name": "app",
+        "user_id": "eval_user",
+        "state": {}
+      }
+    }
+  ]
+}

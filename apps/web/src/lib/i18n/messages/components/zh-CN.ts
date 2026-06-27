@@ -1,0 +1,168 @@
+/**
+ * 组件相关的中文简体翻译消息
+ */
+const ERROR_CODES = {
+  AUTH_UNAUTHORIZED: 'AUTH_UNAUTHORIZED',
+  AUTH_FORBIDDEN: 'AUTH_FORBIDDEN',
+  AUTH_INVALID_TOKEN: 'AUTH_INVALID_TOKEN',
+  AUTH_SESSION_EXPIRED: 'AUTH_SESSION_EXPIRED',
+  AUTH_MISSING_SESSION_ID: 'AUTH_MISSING_SESSION_ID',
+  AUTH_SESSION_NOT_FOUND: 'AUTH_SESSION_NOT_FOUND',
+  RESOURCE_NOT_FOUND: 'RESOURCE_NOT_FOUND',
+  RESOURCE_ALREADY_EXISTS: 'RESOURCE_ALREADY_EXISTS',
+  VALIDATION_ERROR: 'VALIDATION_ERROR',
+  VALIDATION_INVALID_UPDATES: 'VALIDATION_INVALID_UPDATES',
+  VALIDATION_REQUIRED: 'VALIDATION_REQUIRED',
+  VALIDATION_INVALID_FORMAT: 'VALIDATION_INVALID_FORMAT',
+  INTERNAL_ERROR: 'INTERNAL_ERROR',
+} as const
+
+const componentsZhCn = {
+  layout: {
+    header: {
+      features: '产品能力',
+      useCases: '使用场景',
+      pricing: '价格',
+      about: '关于',
+      signIn: '登录',
+      getStarted: '免费开始',
+    },
+    footer: {
+    },
+  },
+  errors: {
+    notFound: {
+      title: '404',
+      description: '您访问的页面可能已被移动或不存在。',
+      goHome: '返回首页',
+      explore: '探索',
+    },
+    unauthorized: {
+      title: '401',
+      description: '您需要登录才能访问此资源。',
+      goHome: '返回首页',
+      goBack: '返回',
+      signIn: '登录',
+    },
+    forbidden: {
+      title: '403',
+      description: '您没有权限访问此资源。',
+      adminOnly: '此页面仅管理员可访问。',
+      goHome: '返回首页',
+      goBack: '返回',
+    },
+    serverError: {
+      title: '500',
+      description: '服务器发生错误，请稍后重试。',
+      goHome: '返回首页',
+      goBack: 'Go Back',
+      tryAgain: 'Try Again',
+    },
+    maintenance: {
+      title: '503',
+      description: '网站正在维护中，我们将尽快恢复。',
+      goHome: '返回首页',
+      learnMore: '了解更多',
+    },
+    default: {
+      title: '错误',
+      defaultDescription: '发生未知错误。',
+      tryAgain: '重试',
+      goHome: '首页',
+      goBack: '返回',
+    },
+    server: {
+      AUTH_UNAUTHORIZED: '未授权，请重新登录。',
+      AUTH_FORBIDDEN: '禁止访问，您无权执行此操作。',
+      AUTH_INVALID_TOKEN: '无效的认证令牌，请重新登录。',
+      AUTH_SESSION_EXPIRED: '会话已过期，请重新登录。',
+      AUTH_MISSING_SESSION_ID: '缺少会话 ID。',
+      AUTH_SESSION_NOT_FOUND: '未找到会话，请重新登录。',
+      RESOURCE_NOT_FOUND: '资源不存在。',
+      RESOURCE_ALREADY_EXISTS: '资源已存在。',
+      VALIDATION_ERROR: '验证错误，请检查输入。',
+      VALIDATION_INVALID_UPDATES: '无效的更新数据。',
+      VALIDATION_REQUIRED: '缺少必填字段。',
+      VALIDATION_INVALID_FORMAT: '格式无效，请检查输入格式。',
+      INTERNAL_ERROR: '服务器内部错误，请稍后重试。',
+      unauthorized: '未授权，请重新登录。',
+      forbidden: '禁止访问，您无权执行此操作。',
+      notFound: '资源不存在。',
+      serverError: 'Internal server error. Please try again later.',
+      maintenance: 'Service temporarily unavailable.',
+      contentNotFound: 'Content not found.',
+      default: '出错了，请稍后重试。',
+    },
+  },
+  pending: {
+    title: '加载中...',
+    description: '请稍候，我们正在加载数据。',
+    cancel: '取消',
+  },
+  buttons: {
+    cancel: '取消',
+    confirm: '确认',
+    delete: '删除',
+    close: '关闭',
+  },
+  table: {
+    searchPlaceholder: '搜索...',
+    pagination: {
+      page: '{current}/{total}',
+      pageFull: '第 {current} 页，共 {total} 页',
+      rowsPerPage: '每页',
+      rowsPerPageFull: '每页行数',
+      goToFirstPage: '跳转到第一页',
+      goToPreviousPage: '跳转到上一页',
+      goToNextPage: '跳转到下一页',
+      goToLastPage: '跳转到最后一页',
+      goToPage: '跳转到第 {page} 页',
+    },
+    buttons: {
+      import: '导入',
+      create: '创建',
+      search: '搜索',
+      reset: '重置',
+      view: '查看',
+    },
+  },
+  forms: {
+    validation: {
+      required: '该字段为必填项',
+      email: '请输入有效的邮箱地址',
+      minLength: '最少需要 {min} 个字符',
+      maxLength: '最多允许 {max} 个字符',
+      min: '最小值不能小于 {min}',
+      max: '最大值不能大于 {max}',
+      pattern: '格式不正确',
+      url: '请输入有效的 URL',
+      number: '请输入有效的数字',
+      integer: '请输入整数',
+      positive: '请输入正数',
+      negative: '请输入负数',
+      date: '请输入有效的日期',
+      time: '请输入有效的时间',
+      match: '两次输入不匹配',
+      unique: '该值已存在',
+    },
+  },
+  auth: {
+    signIn: {
+      title: '登录',
+      description: '欢迎回来',
+    },
+  },
+  api: {
+    errors: {
+      VALIDATION_REQUIRED: '该字段为必填项',
+      VALIDATION_INVALID_UPDATES: '没有需要更新的字段',
+      VALIDATION_ERROR: '表单验证失败',
+      AUTH_UNAUTHORIZED: '请先登录',
+      AUTH_FORBIDDEN: '权限不足',
+      RESOURCE_NOT_FOUND: '资源不存在',
+      INTERNAL_ERROR: '服务器内部错误',
+    },
+  },
+} as const
+
+export default componentsZhCn

@@ -1,0 +1,50 @@
+apiVersion: serving.knative.dev/v1
+kind: Service
+metadata:
+  name: hackathon-backend
+  namespace: gemini-hackathon
+  labels:
+    cloud.googleapis.com/location: asia-northeast1
+spec:
+  template:
+    spec:
+      serviceAccountName: hackathon-runner@gemini-hackathon.iam.gserviceaccount.com
+      containers:
+        # Ingress 主容器：Node.js API
+        - image: asia-northeast1-docker.pkg.dev/gemini-hackathon/hackathon-repo/api:latest
+          name: backend-api
+          ports:
+            - containerPort: 8080
+          env:
+            - name: NODE_ENV
+              value: "production"
+            - name: AGENT_API_URL
+              value: "http://127.0.0.1:7668"
+            - name: GCS_BUCKET_NAME
+              value: "hackathon-applets-123456"
+            - name: FIREBASE_PROJECT_ID
+              value: "gemini-hackathon"
+            - name: GOOGLE_CLOUD_PROJECT
+              value: "gemini-hackathon"
+            - name: APP_URL
+              value: "https://hackathon-web-498706-asia-northeast1.a.run.app"
+            - name: BETTER_AUTH_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: hackathon-master-key
+                  key: latest
+        # Sidecar 伴生容器：Python Agent
+        - image: asia-northeast1-docker.pkg.dev/gemini-hackathon/hackathon-repo/agent:latest
+          name: backend-agent
+          env:
+            - name: PYTHONUNBUFFERED
+              value: "1"
+            - name: GOOGLE_CLOUD_PROJECT
+              value: "gemini-hackathon"
+          startupProbe:
+            failureThreshold: 6
+            periodSeconds: 10
+            tcpSocket:
+              port: 7668
+            timeoutSeconds: 3
+

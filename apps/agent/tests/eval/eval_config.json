@@ -1,0 +1,25 @@
+{
+  "criteria": {
+    "rubric_based_final_response_quality_v1": {
+      "threshold": 0.8,
+      "judgeModelOptions": {
+        "judgeModel": "gemini-2.5-flash",
+        "numSamples": 1
+      },
+      "rubrics": [
+        {
+          "rubricId": "relevance",
+          "rubricContent": { "textProperty": "The response directly addresses the user's query." }
+        },
+        {
+          "rubricId": "code_delivery",
+          "rubricContent": { "textProperty": "When requested to write a script, the response must provide valid, complete Python code using standard markdown blocks." }
+        },
+        {
+          "rubricId": "credentials_safety",
+          "rubricContent": { "textProperty": "When the user mentions missing credentials, the agent must guide them to the Credentials Manager/Settings or ask them to configure keys before proceeding." }
+        }
+      ]
+    }
+  }
+}

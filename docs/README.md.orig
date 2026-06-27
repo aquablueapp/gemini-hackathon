@@ -1,0 +1,132 @@
+# 智能应用开发平台（智能多源开发周报/日报生成器）
+
+这是一个基于 **Monorepo** 架构构建的智能代理应用平台（Agent Application Platform），具备完全的云原生、无状态伸缩性，并原生适配部署在 **GCP (Google Cloud Run)** 上。
+
+平台默认落地场景为 **智能多源工作流自动合成与日报/周报生成器**。它能安全连接 GitHub 提交/代码 Diff、Google Docs、Jira 看板等数据源，通过 Vertex AI 驱动的 Gemini 智能代理执行语义分析并分类，最终在前端流式渲染工作流执行进度，并生成量化性能看板和周报。
+
+---
+
+## 🛠 1. 技术栈总览
+
+项目采用 Bun 工作区（Bun Workspaces）组织多包 Monorepo 拓扑：
+
+```
+test/
+├── apps/
+│   ├── web/        # 前端：TanStack Start + React 19 全栈 SSR 应用
+│   ├── api/        # 后端：Hono.js / Node.js 业务网关与沙盒执行器
+│   └── agent/      # AI 代理：Python 3.11 + FastAPI 伴生 ReAct 推理端
+└── docs/           # 项目相关的设计文档与部署指南
+```
+
+### 1.1 三端核心选型
+*   **前端控制台 (`apps/web`)**：
+    *   **框架**：React 19 + TanStack Start (SSR) + Vite + Tailwind CSS v4。
+    *   **关键库**：React Flow (`@xyflow/react`) 渲染只读工作流节点；`Recharts` 绘制类别占比与性能量化柱状图；`Radix UI` 保证无障碍 UI 组件可访问性。
+    *   **数据流**：使用 TanStack Router 进行强类型路由定义与首屏预取，使用 TanStack Query v5 进行客户端状态水合。
+*   **后端 API 服务 (`apps/api`)**：
+    *   **框架**：Hono.js + `@hono/node-server` (标准 Node.js HTTP 托管)。
+    *   **关键库**：`@hono/zod-openapi` + `@scalar/hono-api-reference`（自动生成强类型契约文档并于 `/reference` 路由下交互展示）；`Pino` 结构化 JSON 日志系统。
+    *   **安全**：使用 `AES-256-GCM` 硬件加速加密托管三方 Token，在 Sandbox 运行期以临时环境变量的形式安全注入。
+*   **AI 代理伴生端 (`apps/agent`)**：
+    *   **框架**：Python 3.11 + FastAPI + ADK-Python (Google DeepMind Agent SDK)。
+    *   **设计模式**：采用**无状态 Agent** 设计。会话历史及上下文在 Node.js 端由 Firestore 托管并打包请求，Python 仅进行内存 ReAct 推理，避免状态脑裂并支持水平秒级缩容至零。
+
+---
+
+## 📐 2. 系统拓扑与数据流向
+
+### 2.1 物理部署架构
+在 GCP Cloud Run 生产环境中，系统采用 **Knative Sidecar 多容器** 拓扑部署，两端共享 Localhost 网络空间：
+
+```
+                    [ 外部 Ingress 流量 ]
+                             │
+                             ▼ (Port 8080)
+┌────────────────────────────────────────────────────────┐
+│ Cloud Run 实例 (Pod)                                    │
+│                                                        │
+│  ┌──────────────────────┐   http://localhost:7668      │
+│  │   backend-api        ├──────────────────────────┐   │
+│  │   (Node.js / Hono)   │                          │   │
+│  └──────────┬───────────┘                          ▼   │
+│             │                               ┌──────────┴──────────┐
+│             │ spawn (子进程)                 │   backend-agent     │
+│             ▼                               │   (Python / ADK)    │
+│  ┌──────────────────────┐                   └─────────────────────┘
+│  │   Sandbox 进程       │                                      │
+│  │ (uv run applet.py)   │                                      │
+│  └──────────────────────┘                                      │
+└────────────────────────────────────────────────────────┘
+```
+
+> [!IMPORTANT]
+> **沙盒宿主运行规则**：用户 Applet 的沙盒测试与执行实际上是**运行在主 Ingress 容器 `backend-api` 的 Node 子进程中**，而非伴生容器。因此，主容器 of Docker 镜像除了安装 Bun 之外，必须打包安装 `python3`, `python3-venv` 和 `astral-uv` 工具链。
+
+---
+
+## 💻 3. 本地开发与调试 (Quick Start)
+
+### 3.1 依赖安装
+项目强制且仅能使用 `bun` 作为包管理器。
+```bash
+# 在 monorepo 根目录下安装所有子应用的依赖
+bun install
+```
+
+### 3.2 数据库与外部依赖自动探测降级
+为保证本地开发“开箱即用”，项目集成了数据库自动降级逻辑：
+*   在本地 `development` 或 `test` 模式下，系统在启动时会通过子进程调用 `nc -z -w 1 127.0.0.1 8081` 自动探测本机是否运行有 Firebase/Firestore 模拟器。
+*   若探测成功则直接连接模拟器；若未探测到，系统将优雅降级为内存 **`MockFirestore`**，将元数据持久化存放到 `/tmp/aquablue-mock-db.json` 并内置演示用 Seed 种子数据。
+
+### 3.3 启动本地开发服务
+```bash
+# 启动前端、后端和 Sidecar 代理的所有本地开发服务
+bun run dev
+```
+
+### 3.4 运行测试 (测试铁律)
+运行测试时必须遵循以下指令：
+```bash
+# 运行单元与集成测试（使用 Vitest 驱动）
+bun run test
+```
+> [!CAUTION]
+> **绝对不要使用原生 `bun test` 命令行**。原生的 Bun 测试运行时不加载 `vitest.config.ts` 中的 `happy-dom` 浏览器虚拟环境，这会导致 React UI 组件单测挂载时发生无限卡死。
+
+---
+
+## 🚀 4. GCP Cloud Run 生产部署
+
+### 4.1 环境变量配置
+在部署前，需在 GCP Secret Manager 中注册主加密密钥，并准备好以下环境变量：
+*   `GOOGLE_CLOUD_PROJECT`：GCP 项目 ID
+*   `MASTER_KEY_SECRET_NAME`：Secret Manager 中加密密钥的 Secret 名称
+*   `API_URL`：前端请求后端的公网 API URL
+*   `APP_URL`：后端 CORS/重定向授权的前端公网 URL
+
+### 4.2 双向环境变量回填脚本 (`deploy.sh`)
+由于前端和后端相互依赖对方的公网 URL，首次部署或更新时，必须执行双向回填流水线：
+1.  **第一步**：部署后端 API 服务 `hackathon-backend`，通过 `gcloud run services describe` 导出后端公网 `BACKEND_URL`。
+2.  **第二步**：部署前端 `hackathon-web`，将 `--set-env-vars="API_URL=${BACKEND_URL}"` 注入，部署成功后获取前端公网 `FRONTEND_URL`。
+3.  **第三步**：使用 `gcloud run services update` 将前端公网 `FRONTEND_URL` 作为环境变量 `APP_URL` 动态更新回填给后端服务，完成安全跨域闭环。
+
+### 4.3 伴生容器就绪探针 (startupProbe)
+Python 伴生容器（`backend-agent`）启动加载依赖较慢。为避免服务刚就绪时前端请求遭遇 `500 Connection Refused`，必须在 Knative 服务配置文件 `hackathon-service.yaml` 中为该 Sidecar 容器显式配置 `startupProbe`：
+```yaml
+startupProbe:
+  failureThreshold: 6
+  periodSeconds: 10
+  tcpSocket:
+    port: 7668
+  timeoutSeconds: 3
+```
+
+---
+
+## ⚠️ 5. 核心编码红线与避坑经验
+
+*   **严禁 anywhere any**：类型不确定时强制使用 `unknown`，通过运行时防御性断言或 Zod Schema 进行类型窄化。
+*   **禁止 naked console.log**：前/后端开发中均不要使用原生控制台打印。必须使用高度结构化且对齐云端收集的 `pino` 日志输出库。
+*   **前端禁止 Naked Fetch**：严禁在 React 组件生命周期内直接使用 `useEffect` 抓取 API。首屏数据必须在 TanStack Router `loader` 中通过 `ensureQueryData()` 预取，并在组件内使用 `useSuspenseQuery` 实现服务端流式水合。
+*   **前端启动内存优化**：在生产前端容器镜像中，以 `node .output/server/index.mjs` 直接拉取 Nitro 服务。禁止使用 `vinxi` 包装，这可以节省大量实例启动的开销，防止实例因 OOM 被 GCP 强杀。

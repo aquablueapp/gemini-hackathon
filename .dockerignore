@@ -1,0 +1,20 @@
+# Ignore environmental configs
+**/.env
+**/.env.*
+**/*.env
+
+# Ignore dependency and local build directories
+**/node_modules
+**/dist
+**/.output
+**/.turbo
+**/.next
+**/.wrangler
+
+# Ignore git and logs
+**/.git
+**/*.log
+.gitignore
+README.md
+GEMINI.md
+graphify-out/
