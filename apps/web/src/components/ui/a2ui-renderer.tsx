@@ -308,7 +308,7 @@ export const A2uiRenderer: React.FC<{ payload: string | object }> = ({ payload }
           window.dispatchEvent(new CustomEvent('a2ui-action', {
             detail: {
               action: 'send_message',
-              value: `我选择的项目仓库是：${selectedValue}`,
+              value: `I selected the project repository: ${selectedValue}`,
             },
           }))
         }
@@ -322,7 +322,7 @@ export const A2uiRenderer: React.FC<{ payload: string | object }> = ({ payload }
                 onChange={e => setSelectedValue(e.target.value)}
                 className="flex-1 h-9 rounded-lg border border-stone-200 dark:border-stone-850 bg-white/50 dark:bg-stone-900/50 px-3 text-xs outline-hidden focus:border-stone-400 dark:focus:border-stone-750 text-stone-800 dark:text-stone-200"
               >
-                <option value="">{placeholder || '请选择一个仓库...'}</option>
+                <option value="">{placeholder || 'Select a repository...'}</option>
                 {options?.map((opt: any, idx: number) => {
                   const val = typeof opt === 'string' ? opt : opt.value
                   const lbl = typeof opt === 'string' ? opt : opt.label
@@ -334,7 +334,7 @@ export const A2uiRenderer: React.FC<{ payload: string | object }> = ({ payload }
                 disabled={!selectedValue}
                 className="h-9 px-3 rounded-lg bg-stone-900 text-stone-50 hover:bg-stone-850 dark:bg-stone-50 dark:text-stone-950 dark:hover:bg-stone-150 text-xs font-semibold shadow-2xs transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center"
               >
-                确认选择
+                Confirm Selection
               </button>
             </div>
           </div>
