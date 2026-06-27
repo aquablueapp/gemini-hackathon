@@ -28,8 +28,8 @@ export { useMessages }
  * 获取当前 locale（同构函数，支持 SSR 和客户端）
  */
 export const getCurrentLocale = createIsomorphicFn()
-  .server(() => 'en')
-  .client(() => 'en')
+  .server(() => 'en' as Locale)
+  .client(() => 'en' as Locale)
 
 /**
  * 获取客户端 locale（仅客户端使用）
