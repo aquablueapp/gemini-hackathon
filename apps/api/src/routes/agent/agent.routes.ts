@@ -8,7 +8,7 @@ const tags = ['Agent']
 export const chatRequestSchema = z.object({
   message: z.string().min(1).openapi({ example: 'Clean old spams from Inbox' }),
   sessionId: z.string().min(1).openapi({ example: 'session_123' }),
-  model: z.string().optional().openapi({ example: 'gemini-2.5-flash' }),
+  model: z.string().optional().openapi({ example: 'gemini-3.5-flash' }),
 })
 
 export const chatRoute = createRoute({

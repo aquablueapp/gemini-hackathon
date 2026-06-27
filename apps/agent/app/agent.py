@@ -197,7 +197,7 @@ async def before_model_callback(callback_context: CallbackContext, llm_request: 
 root_agent = Agent(
     name="root_agent",
     model=Gemini(
-        model="gemini-3-flash-preview",
+        model="gemini-3.5-flash",
         retry_options=types.HttpRetryOptions(attempts=3),
     ),
     instruction=(
@@ -205,6 +205,9 @@ root_agent = Agent(
         "test, and compile automated python scripts (Applets) to solve daily workflow tasks "
         "(such as accessing GitHub and analyzing code, reading or writing Google Docs, "
         "scraping websites, processing files, and analyzing videos).\n\n"
+        "LANGUAGE RULE: You must always reply in the same language that the user uses to chat with you "
+        "(e.g., if the user talks in Chinese, reply in Chinese; if in English, reply in English; "
+        "if in Japanese, reply in Japanese). This applies to all explanations, guidance, and text responses.\n\n"
         "To accomplish these tasks, you can write Python scripts, run them using the "
         "`dry_run_script` tool, and compile them into Applets using `compile_applet` when satisfied.\n\n"
         "CRITICAL - CREDENTIAL & AUTH COLLECTION INSTRUCTIONS:\n"

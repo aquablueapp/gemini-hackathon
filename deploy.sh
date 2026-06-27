@@ -1,10 +1,13 @@
 #!/bin/bash
 set -e
 
-PROJECT_ID="gemini-hackathon"
+PROJECT_ID="alien-legacy-500702-r7"
 REGION="asia-northeast1"
 REPO_NAME="hackathon-repo"
 REGISTRY_URL="${REGION}-docker.pkg.dev/${PROJECT_ID}/${REPO_NAME}"
+
+# 确保 gcloud active project 切换为目标项目，以使 Cloud Run namespace 与当前项目对齐
+gcloud config set project "${PROJECT_ID}"
 
 # 定义推送重试函数以应对 GCP API 激活后的同步延迟
 push_with_retry() {

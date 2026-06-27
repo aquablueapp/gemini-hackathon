@@ -69,7 +69,6 @@ export function handleLocaleMiddleware(request: Request): {
   // 优先级：Cookie > Accept-Language > 默认语言
   const detectedLocale
     = cookieLocale
-      ?? detectLocaleFromAcceptLanguage(request.headers.get('accept-language'))
       ?? defaultLocale
 
   // 如果检测到的语言不是默认语言，且与 cookie 不同，重定向并设置 cookie

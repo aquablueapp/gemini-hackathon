@@ -71,7 +71,7 @@ interface LogLine {
   type: 'stdout' | 'stderr'
 }
 
-const DEFAULT_MODEL_ID = 'gemini-2.5-flash'
+const DEFAULT_MODEL_ID = 'gemini-3.5-flash'
 
 function CodeBlockWithActions({ code, language }: { code: string, language: string }) {
   const [copied, setCopied] = React.useState(false)

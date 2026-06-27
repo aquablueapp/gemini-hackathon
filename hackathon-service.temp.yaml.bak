@@ -11,7 +11,7 @@ spec:
       serviceAccountName: hackathon-runner@alien-legacy-500702-r7.iam.gserviceaccount.com
       containers:
         # Ingress 主容器：Node.js API
-        - image: asia-northeast1-docker.pkg.dev/alien-legacy-500702-r7/hackathon-repo/api:latest
+        - image: asia-northeast1-docker.pkg.dev/alien-legacy-500702-r7/hackathon-repo/api@sha256:8a912c298911efc96e20d650bef0e1563484b872b083f0caa3594a8d7eed7d42
           name: backend-api
           ports:
             - containerPort: 8080

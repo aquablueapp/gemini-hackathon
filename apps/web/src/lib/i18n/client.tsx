@@ -37,7 +37,6 @@ export const getCurrentLocale = createIsomorphicFn()
       if (shouldIgnorePath(url.pathname)) {
         return (
           parseLocaleCookie(request.headers.get('cookie'))
-          ?? detectLocaleFromAcceptLanguage(request.headers.get('accept-language'))
           ?? defaultLocale
         )
       }
@@ -45,7 +44,6 @@ export const getCurrentLocale = createIsomorphicFn()
       return (
         extractLocaleFromPath(url.pathname)
         ?? parseLocaleCookie(request.headers.get('cookie'))
-        ?? detectLocaleFromAcceptLanguage(request.headers.get('accept-language'))
         ?? defaultLocale
       )
     }
@@ -62,7 +60,6 @@ export const getCurrentLocale = createIsomorphicFn()
     if (shouldIgnorePath(window.location.pathname)) {
       return (
         parseLocaleCookie(document.cookie)
-        ?? detectLocaleFromNavigator()
         ?? defaultLocale
       )
     }
@@ -70,7 +67,6 @@ export const getCurrentLocale = createIsomorphicFn()
     return (
       extractLocaleFromPath(window.location.pathname)
       ?? parseLocaleCookie(document.cookie)
-      ?? detectLocaleFromNavigator()
       ?? defaultLocale
     )
   })
@@ -87,14 +83,12 @@ export function getClientLocale(pathname: string): Locale {
   if (shouldIgnorePath(pathname)) {
     return (
       parseLocaleCookie(document.cookie)
-      ?? detectLocaleFromNavigator()
       ?? defaultLocale
     )
   }
   return (
     extractLocaleFromPath(pathname)
     ?? parseLocaleCookie(document.cookie)
-    ?? detectLocaleFromNavigator()
     ?? defaultLocale
   )
 }
