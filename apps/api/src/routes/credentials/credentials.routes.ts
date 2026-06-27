@@ -43,8 +43,27 @@ export const listConfiguredCredentialsRoute = createRoute({
   },
 })
 
+export const deleteCredentialRoute = createRoute({
+  path: '/credentials/{service}',
+  method: 'delete',
+  request: {
+    params: z.object({
+      service: z.string().min(1).openapi({ example: 'github', description: 'The service name to delete' }),
+    }),
+  },
+  tags,
+  responses: {
+    [HttpStatusCodes.OK]: jsonContent(
+      z.object({ success: z.boolean() }),
+      'Credential deleted successfully',
+    ),
+  },
+})
+
 export const save = saveCredentialRoute
 export const list = listConfiguredCredentialsRoute
+export const remove = deleteCredentialRoute
 
 export type SaveRoute = typeof saveCredentialRoute
 export type ListRoute = typeof listConfiguredCredentialsRoute
+export type DeleteRoute = typeof deleteCredentialRoute

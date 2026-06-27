@@ -969,20 +969,6 @@ setMessages(prev =>
     }
   }, [handleSend])
 
-  // Listen for credential saving to automatically continue
-  React.useEffect(() => {
-    const handleCredentialSaved = (e: Event) => {
-      const customEvent = e as CustomEvent<{ service: string }>
-      const service = customEvent.detail?.service || 'credential'
-      handleSend(`I have successfully authorized ${service}. Please continue.`)
-    }
-
-    window.addEventListener('credential-saved', handleCredentialSaved)
-    return () => {
-      window.removeEventListener('credential-saved', handleCredentialSaved)
-    }
-  }, [handleSend])
-
   // Handle Google OAuth success redirection
   React.useEffect(() => {
     const params = new URLSearchParams(window.location.search)
@@ -996,9 +982,8 @@ setMessages(prev =>
       )
       refreshCredentials()
       
-      import('sonner').then(({ toast }) => {
-        toast.success("✅ Successfully connected to Google Slides!")
-      })
+      // Keep Google Slides OAuth confirmation alert dialog to block until user acknowledges
+      alert("✅ Successfully connected to Google Slides!")
       
       // Delay slightly to ensure credentials are fully loaded and UI updated, then continue
       setTimeout(() => {
@@ -1032,7 +1017,21 @@ setMessages(prev =>
     }
   }
 
+  const clearGithubCredential = React.useCallback(async () => {
+    try {
+      await fetch(`${API_BASE_URL}/credentials/github`, { method: 'DELETE' })
+    }
+    catch (err) {
+      console.error('Failed to clear Github credential:', err)
+    }
+  }, [])
+
+  React.useEffect(() => {
+    clearGithubCredential()
+  }, [clearGithubCredential])
+
   const handleNewEmployee = () => {
+    clearGithubCredential()
     navigate({
       search: (prev) => ({ ...prev, sessionId: `session_${Date.now()}` })
     })

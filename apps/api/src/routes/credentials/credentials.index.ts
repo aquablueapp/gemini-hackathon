@@ -6,6 +6,7 @@ import * as routes from './credentials.routes'
 const router = createRouter()
   .openapi(routes.list, handlers.listConfiguredCredentials)
   .openapi(routes.save, handlers.saveUserCredential)
+  .openapi(routes.remove, handlers.deleteUserCredential)
 
 // Direct Hono routes for Google OAuth 2.0 flow
 router.get('/auth/google', (c) => {

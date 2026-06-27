@@ -75,11 +75,27 @@ const CredentialFormBox: React.FC<{ service: string, title?: string, description
 
       {saved
         ? (
-            <div className="flex items-center gap-2 p-3 bg-emerald-50/50 dark:bg-emerald-950/20 text-emerald-700 dark:text-emerald-400 border border-emerald-250 dark:border-emerald-900/40 rounded-xl text-xs font-semibold">
-              <svg className="w-4 h-4 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-              </svg>
-              <span>Connection active! You can now ask the agent to retry the task.</span>
+            <div className="flex flex-col gap-3 p-3 bg-emerald-50/50 dark:bg-emerald-950/20 border border-emerald-250 dark:border-emerald-900/40 rounded-xl">
+              <div className="flex items-center gap-2 text-emerald-700 dark:text-emerald-400 text-xs font-semibold">
+                <svg className="w-4 h-4 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                </svg>
+                <span>Connection saved successfully!</span>
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  window.dispatchEvent(new CustomEvent('a2ui-action', {
+                    detail: {
+                      action: 'send_message',
+                      value: `I have successfully authorized ${service}. Please continue.`,
+                    },
+                  }))
+                }}
+                className="w-full py-1.5 px-3 rounded-lg bg-stone-900 hover:bg-stone-850 dark:bg-stone-50 dark:text-stone-950 dark:hover:bg-stone-150 text-xs font-semibold shadow-2xs transition-all cursor-pointer text-center"
+              >
+                Confirm & Continue
+              </button>
             </div>
           )
         : (

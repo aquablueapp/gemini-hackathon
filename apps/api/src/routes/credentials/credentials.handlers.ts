@@ -1,4 +1,4 @@
-import type { ListRoute, SaveRoute } from './credentials.routes'
+import type { ListRoute, SaveRoute, DeleteRoute } from './credentials.routes'
 import type { FirestoreUserCredential } from '@/db/schema/firestore'
 import type { AppRouteHandler } from '@/lib/types'
 import * as HttpStatusCodes from 'stoker/http-status-codes'
@@ -39,6 +39,22 @@ export const listConfiguredCredentials: AppRouteHandler<ListRoute> = async (c) =
     console.error('Failed to list user credentials', err)
     return c.json(
       [],
+      HttpStatusCodes.INTERNAL_SERVER_ERROR as any,
+    )
+  }
+}
+
+export const deleteUserCredential: AppRouteHandler<DeleteRoute> = async (c) => {
+  const { service } = c.req.valid('param')
+  try {
+    const docId = `default_user:${service.toLowerCase()}`
+    await firestore.collection('user_credentials').doc(docId).delete()
+    return c.json({ success: true }, HttpStatusCodes.OK)
+  }
+  catch (err) {
+    console.error(`Failed to delete credential for service: ${service}`, err)
+    return c.json(
+      { success: false },
       HttpStatusCodes.INTERNAL_SERVER_ERROR as any,
     )
   }

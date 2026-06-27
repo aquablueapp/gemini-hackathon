@@ -41,16 +41,6 @@ export const chatHandler: AppRouteHandler<ChatRoute> = async (c) => {
     console.error('Failed to retrieve user credentials for agent payload:', err)
   }
 
-  // If github token exists in userCredentials, delete it from database to prevent caching
-  if (userCredentials.github) {
-    try {
-      const docId = `default_user:github`
-      await firestore.collection('user_credentials').doc(docId).delete()
-    }
-    catch (delErr) {
-      console.error('Failed to clean up github credential after read:', delErr)
-    }
-  }
 
 
   const stateDelta: Record<string, any> = {
