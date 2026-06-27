@@ -28,84 +28,21 @@ export { useMessages }
  * 获取当前 locale（同构函数，支持 SSR 和客户端）
  */
 export const getCurrentLocale = createIsomorphicFn()
-  .server(() => {
-    try {
-      const request = getRequest()
-      const url = new URL(request.url)
-
-      // Dashboard 从 cookie 读取
-      if (shouldIgnorePath(url.pathname)) {
-        return (
-          parseLocaleCookie(request.headers.get('cookie'))
-          ?? defaultLocale
-        )
-      }
-      // 公开页面从 URL 读取，fallback 到 cookie 和 Accept-Language
-      return (
-        extractLocaleFromPath(url.pathname)
-        ?? parseLocaleCookie(request.headers.get('cookie'))
-        ?? defaultLocale
-      )
-    }
-    catch (e) {
-      // Avoid calling client-side Sentry SDK on Node.js server side to prevent serialization timeouts
-      if (import.meta.env.DEV) {
-        console.warn('SSR locale detection failed, falling back to default:', e)
-      }
-      return defaultLocale
-    }
-  })
-  .client(() => {
-    // Dashboard 从 cookie 读取
-    if (shouldIgnorePath(window.location.pathname)) {
-      return (
-        parseLocaleCookie(document.cookie)
-        ?? defaultLocale
-      )
-    }
-    // 公开页面从 URL 读取，fallback 到 cookie 和 navigator
-    return (
-      extractLocaleFromPath(window.location.pathname)
-      ?? parseLocaleCookie(document.cookie)
-      ?? defaultLocale
-    )
-  })
+  .server(() => 'en')
+  .client(() => 'en')
 
 /**
  * 获取客户端 locale（仅客户端使用）
  */
 export function getClientLocale(pathname: string): Locale {
-  // 安全检查：确保在客户端环境
-  if (typeof window === 'undefined' || typeof document === 'undefined') {
-    return defaultLocale
-  }
-
-  if (shouldIgnorePath(pathname)) {
-    return (
-      parseLocaleCookie(document.cookie)
-      ?? defaultLocale
-    )
-  }
-  return (
-    extractLocaleFromPath(pathname)
-    ?? parseLocaleCookie(document.cookie)
-    ?? defaultLocale
-  )
+  return 'en'
 }
 
 /**
  * 异步加载消息
  */
 export async function loadMessages(locale: Locale): Promise<Messages> {
-  // 验证 locale 是否有效，如果无效则使用默认 locale
-  const normalizedLocale = normalizeLocale(locale) ?? defaultLocale
-  const validLocale = supportedLocales.includes(normalizedLocale) ? normalizedLocale : defaultLocale
-  const loader = messageLoaders[validLocale]
-
-  if (!loader) {
-    throw new Error(`No message loader found for locale: ${validLocale}`)
-  }
-
+  const loader = messageLoaders.en
   const module = await loader()
   return module.default
 }

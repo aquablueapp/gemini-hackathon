@@ -19,7 +19,10 @@ router.get('/auth/google', (c) => {
     `, 400)
   }
   const sessionId = c.req.query('sessionId') || ''
-  const redirectUri = process.env.GOOGLE_REDIRECT_URI || `${new URL(c.req.url).origin}/auth/google/callback`
+  let redirectUri = process.env.GOOGLE_REDIRECT_URI || `${new URL(c.req.url).origin}/auth/google/callback`
+  if (!process.env.GOOGLE_REDIRECT_URI && redirectUri.startsWith('http://') && !redirectUri.includes('localhost') && !redirectUri.includes('127.0.0.1')) {
+    redirectUri = redirectUri.replace('http://', 'https://')
+  }
   const oauthUrl = `https://accounts.google.com/o/oauth2/v2/auth?` + 
     `client_id=${encodeURIComponent(clientId)}` +
     `&redirect_uri=${encodeURIComponent(redirectUri)}` +
@@ -39,7 +42,10 @@ router.get('/auth/google/callback', async (c) => {
   }
   const clientId = process.env.GOOGLE_CLIENT_ID || ''
   const clientSecret = process.env.GOOGLE_CLIENT_SECRET || ''
-  const redirectUri = process.env.GOOGLE_REDIRECT_URI || `${new URL(c.req.url).origin}/auth/google/callback`
+  let redirectUri = process.env.GOOGLE_REDIRECT_URI || `${new URL(c.req.url).origin}/auth/google/callback`
+  if (!process.env.GOOGLE_REDIRECT_URI && redirectUri.startsWith('http://') && !redirectUri.includes('localhost') && !redirectUri.includes('127.0.0.1')) {
+    redirectUri = redirectUri.replace('http://', 'https://')
+  }
 
   try {
     const tokenRes = await fetch('https://oauth2.googleapis.com/token', {
