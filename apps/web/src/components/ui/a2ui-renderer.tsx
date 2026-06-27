@@ -41,6 +41,7 @@ const CredentialFormBox: React.FC<{ service: string, title?: string, description
         import('sonner').then(({ toast }) => {
           toast.success(`Credential for ${service} saved and encrypted successfully!`)
         })
+        window.dispatchEvent(new CustomEvent('credential-saved', { detail: { service } }))
       }
       else {
         throw new Error('Failed to save')
@@ -238,8 +239,12 @@ export const A2uiRenderer: React.FC<{ payload: string | object }> = ({ payload }
       }
 
       case 'Button': {
-        const { label, variant, action } = node.props || {}
+        const { label, variant, action, url } = node.props || {}
         const handleClick = () => {
+          if (url) {
+            window.open(url, '_blank', 'noopener,noreferrer')
+            return
+          }
           if (action) {
             import('sonner').then(({ toast }) => {
               toast.success(`A2UI Action Triggered: ${action}`)

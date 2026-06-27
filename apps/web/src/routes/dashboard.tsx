@@ -331,20 +331,6 @@ export function DashboardPage() {
     refreshCredentials()
   }, [refreshCredentials])
 
-  React.useEffect(() => {
-    const params = new URLSearchParams(window.location.search)
-    if (params.get('auth_success') === 'google') {
-      params.delete('auth_success')
-      const newQuery = params.toString()
-      window.history.replaceState(
-        {},
-        '',
-        `${window.location.pathname}${newQuery ? `?${newQuery}` : ''}`
-      )
-      refreshCredentials()
-      alert("✅ Successfully connected to Google Slides!")
-    }
-  }, [refreshCredentials])
 
   const timelineEndRef = React.useRef<HTMLDivElement>(null)
   const terminalEndRef = React.useRef<HTMLDivElement>(null)
@@ -982,6 +968,44 @@ setMessages(prev =>
       window.removeEventListener('a2ui-action', handleA2uiAction)
     }
   }, [handleSend])
+
+  // Listen for credential saving to automatically continue
+  React.useEffect(() => {
+    const handleCredentialSaved = (e: Event) => {
+      const customEvent = e as CustomEvent<{ service: string }>
+      const service = customEvent.detail?.service || 'credential'
+      handleSend(`I have successfully authorized ${service}. Please continue.`)
+    }
+
+    window.addEventListener('credential-saved', handleCredentialSaved)
+    return () => {
+      window.removeEventListener('credential-saved', handleCredentialSaved)
+    }
+  }, [handleSend])
+
+  // Handle Google OAuth success redirection
+  React.useEffect(() => {
+    const params = new URLSearchParams(window.location.search)
+    if (params.get('auth_success') === 'google') {
+      params.delete('auth_success')
+      const newQuery = params.toString()
+      window.history.replaceState(
+        {},
+        '',
+        `${window.location.pathname}${newQuery ? `?${newQuery}` : ''}`
+      )
+      refreshCredentials()
+      
+      import('sonner').then(({ toast }) => {
+        toast.success("✅ Successfully connected to Google Slides!")
+      })
+      
+      // Delay slightly to ensure credentials are fully loaded and UI updated, then continue
+      setTimeout(() => {
+        handleSend("I have successfully authorized Google Slides. Please continue.")
+      }, 500)
+    }
+  }, [refreshCredentials, handleSend])
 
   const handleConfirmAction = () => {
     handleSend('Confirm the action and compile this python script into a static Applet.')
