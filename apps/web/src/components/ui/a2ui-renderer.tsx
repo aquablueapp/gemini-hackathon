@@ -165,7 +165,8 @@ export const A2uiRenderer: React.FC<{ payload: string | object }> = ({ payload }
             <button
               onClick={() => {
                 const API_BASE_URL = getApiBaseUrl()
-                window.location.href = `${API_BASE_URL}/auth/google`
+                const sessionId = new URLSearchParams(window.location.search).get('sessionId') || ''
+                window.location.href = `${API_BASE_URL}/auth/google?sessionId=${encodeURIComponent(sessionId)}`
               }}
               className="h-9 px-4 rounded-lg bg-amber-500 hover:bg-amber-600 text-white text-xs font-semibold shadow-2xs transition-all cursor-pointer inline-flex items-center gap-1.5"
               type="button"

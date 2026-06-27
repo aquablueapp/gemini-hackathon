@@ -18,6 +18,7 @@ router.get('/auth/google', (c) => {
       </div>
     `, 400)
   }
+  const sessionId = c.req.query('sessionId') || ''
   const redirectUri = process.env.GOOGLE_REDIRECT_URI || `${new URL(c.req.url).origin}/auth/google/callback`
   const oauthUrl = `https://accounts.google.com/o/oauth2/v2/auth?` + 
     `client_id=${encodeURIComponent(clientId)}` +
@@ -25,12 +26,14 @@ router.get('/auth/google', (c) => {
     `&response_type=code` +
     `&scope=${encodeURIComponent('https://www.googleapis.com/auth/presentations')}` +
     `&access_type=offline` +
-    `&prompt=consent`
+    `&prompt=consent` +
+    (sessionId ? `&state=${encodeURIComponent(sessionId)}` : '')
   return c.redirect(oauthUrl)
 })
 
 router.get('/auth/google/callback', async (c) => {
   const code = c.req.query('code')
+  const state = c.req.query('state') || ''
   if (!code) {
     return c.html(`<div style="font-family:sans-serif;padding:2rem;text-align:center;"><h1>Authentication Error</h1><p>Missing authorization code from Google.</p></div>`, 400)
   }
@@ -67,8 +70,16 @@ router.get('/auth/google/callback', async (c) => {
 
     await saveCredential('google', JSON.stringify(credentialsData))
 
-    const frontendUrl = process.env.APP_URL || 'http://localhost:7666'
-    return c.redirect(`${frontendUrl}/dashboard?auth_success=google`)
+    let frontendUrl = process.env.APP_URL || 'http://localhost:7666'
+    if (frontendUrl.includes('localhost:7667') || frontendUrl.includes('127.0.0.1:7667')) {
+      frontendUrl = frontendUrl.replace('7667', '7666')
+    }
+
+    const redirectUrl = state
+      ? `${frontendUrl}/dashboard?sessionId=${decodeURIComponent(state)}&auth_success=google`
+      : `${frontendUrl}/dashboard?auth_success=google`
+
+    return c.redirect(redirectUrl)
   }
   catch (err: any) {
     console.error('Google OAuth callback failed:', err)

@@ -73,4 +73,29 @@ describe('aIChatBubble Component', () => {
       expect(handleCopySuccess).toHaveBeenCalledOnce()
     })
   })
+
+  it('renders Google Slides links as custom styled buttons', () => {
+    const message: Message = {
+      id: '4',
+      role: 'model',
+      content: 'Here is your slide: https://docs.google.com/presentation/d/1A2B3C4D5E/edit and a markdown [Report Link](https://docs.google.com/presentation/d/6F7G8H9I0J/edit).',
+    }
+
+    render(<AIChatBubble message={message} />)
+
+    // Verify raw url is not rendered as text
+    expect(screen.queryByText('https://docs.google.com/presentation/d/1A2B3C4D5E/edit')).not.toBeInTheDocument()
+
+    // Verify custom buttons are rendered instead
+    const slideButtons = screen.getAllByRole('link')
+    expect(slideButtons).toHaveLength(2)
+
+    expect(slideButtons[0]).toHaveAttribute('href', 'https://docs.google.com/presentation/d/1A2B3C4D5E/edit')
+    expect(slideButtons[0]).toHaveAttribute('target', '_blank')
+    expect(slideButtons[0]).toHaveTextContent('Open in Google Slides')
+
+    expect(slideButtons[1]).toHaveAttribute('href', 'https://docs.google.com/presentation/d/6F7G8H9I0J/edit')
+    expect(slideButtons[1]).toHaveAttribute('target', '_blank')
+    expect(slideButtons[1]).toHaveTextContent('Report Link')
+  })
 })

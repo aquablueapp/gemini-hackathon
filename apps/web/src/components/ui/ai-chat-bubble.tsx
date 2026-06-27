@@ -20,7 +20,7 @@ export interface AIChatBubbleProps {
  * Parses markdown bold and inline code elements.
  */
 function formatInlineText(text: string) {
-  const regex = /(\*\*.*?\*\*|`.*?`)/g
+  const regex = /(\*\*.*?\*\*|`.*?`|\[.*?\]\(https:\/\/docs\.google\.com\/presentation\/d\/[a-zA-Z0-9-_]+(?:\/\S*)?\)|https:\/\/docs\.google\.com\/presentation\/d\/[a-zA-Z0-9-_]+(?:\/\S*)?)/g
   const parts = text.split(regex)
 
   return parts.map((part, index) => {
@@ -39,6 +39,44 @@ function formatInlineText(text: string) {
         >
           {part.slice(1, -1)}
         </code>
+      )
+    }
+    else if (part.startsWith('[') && part.includes('](https://docs.google.com/presentation/d/')) {
+      const labelMatch = part.match(/\[(.*?)\]/)
+      const urlMatch = part.match(/\((.*?)\)/)
+      const label = labelMatch ? labelMatch[1] : 'Open in Google Slides'
+      const url = urlMatch ? urlMatch[1] : ''
+      return (
+        <span key={index} className="inline-block mx-1 my-0.5">
+          <a
+            href={url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-amber-500 hover:bg-amber-600 text-white text-xs font-semibold shadow-2xs transition-all cursor-pointer"
+          >
+            <svg className="w-3.5 h-3.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M7 12l3-3 3 3 4-4M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
+            </svg>
+            {label}
+          </a>
+        </span>
+      )
+    }
+    else if (part.startsWith('https://docs.google.com/presentation/d/')) {
+      return (
+        <span key={index} className="inline-block mx-1 my-0.5">
+          <a
+            href={part}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-amber-500 hover:bg-amber-600 text-white text-xs font-semibold shadow-2xs transition-all cursor-pointer"
+          >
+            <svg className="w-3.5 h-3.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M7 12l3-3 3 3 4-4M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
+            </svg>
+            Open in Google Slides
+          </a>
+        </span>
       )
     }
     return part
