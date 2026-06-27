@@ -1019,6 +1019,7 @@ setMessages(prev =>
 
   const clearGithubCredential = React.useCallback(async () => {
     try {
+      const API_BASE_URL = getApiBaseUrl()
       await fetch(`${API_BASE_URL}/credentials/github`, { method: 'DELETE' })
     }
     catch (err) {
