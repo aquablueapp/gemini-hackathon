@@ -5,6 +5,7 @@ import {
   Bot,
   CheckCircle2,
   ClipboardList,
+  Paperclip,
   Play,
   Plus,
   Send,
@@ -254,6 +255,9 @@ export function DashboardPage() {
   const [input, setInput] = React.useState('')
   const [isStreaming, setIsStreaming] = React.useState(false)
   const [localSessions, setLocalSessions] = React.useState<{ id: string, label: string }[]>([])
+  const [selectedModel, setSelectedModel] = React.useState('gemini-omni')
+  const fileInputRef = React.useRef<HTMLInputElement>(null)
+  const [attachedFile, setAttachedFile] = React.useState<{ base64: string, mimeType: string, name: string } | null>(null)
 
   // Tool & Agent Thinking States
   const [thinkingLogs, setThinkingLogs] = React.useState<string[]>([])
@@ -549,22 +553,52 @@ export function DashboardPage() {
     setRunningAppName(name)
   }
 
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    const reader = new FileReader()
+    reader.onload = () => {
+      const result = reader.result as string
+      const commaIdx = result.indexOf(',')
+      if (commaIdx !== -1) {
+        const base64 = result.substring(commaIdx + 1)
+        setAttachedFile({
+          base64,
+          mimeType: file.type,
+          name: file.name,
+        })
+      }
+    }
+    reader.readAsDataURL(file)
+  }
+
   // ----------------------------------------------------
   // LOGIC: AI Chat Execution
   // ----------------------------------------------------
   const handleSend = async (textToSend?: string) => {
     const messageText = textToSend || input
-    if (!messageText.trim() || isStreaming)
+    const currentAttachedFile = attachedFile
+
+    if (!messageText.trim() && !currentAttachedFile)
       return
 
     if (!textToSend) {
       setInput('')
     }
+    setAttachedFile(null)
+
+    let finalMessageText = messageText
+    if (currentAttachedFile && !messageText.trim()) {
+      finalMessageText = `Analyze uploaded task recording/screenshot: ${currentAttachedFile.name}`
+    }
 
     const userMsg: Message = {
       id: `user_${Date.now()}`,
       role: 'user',
-      content: messageText,
+      content: currentAttachedFile
+        ? `${finalMessageText}\n\n📎 *[Attached File: ${currentAttachedFile.name}]*`
+        : finalMessageText,
     }
 
     setMessages(prev => [...prev, userMsg])
@@ -575,7 +609,7 @@ export function DashboardPage() {
 
     // Add to local sessions if it is a new session
     if (!localSessions.some(s => s.id === sessionId)) {
-      const label = messageText.length > 25 ? `${messageText.substring(0, 25)}...` : messageText
+      const label = finalMessageText.length > 25 ? `${finalMessageText.substring(0, 25)}...` : finalMessageText
       const newSession = { id: sessionId, label }
       const updated = [newSession, ...localSessions]
       setLocalSessions(updated)
@@ -594,9 +628,15 @@ export function DashboardPage() {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          message: messageText,
+          message: finalMessageText,
           sessionId,
-          model: DEFAULT_MODEL_ID,
+          model: selectedModel,
+          ...(currentAttachedFile ? {
+            file: {
+              base64: currentAttachedFile.base64,
+              mimeType: currentAttachedFile.mimeType,
+            }
+          } : {}),
         }),
       })
 
@@ -878,7 +918,7 @@ export function DashboardPage() {
   }) => (
     <div className="flex-1 flex flex-col h-full overflow-hidden animate-in fade-in duration-300">
       <div className="h-16 flex items-center justify-between px-6 py-4 bg-[#f3faff] dark:bg-[#131d28] border-b border-[#d9e1e8] dark:border-[#223145] shrink-0">
-        <div className="flex items-center gap-4 min-w-0">
+        <div className="flex items-center gap-4 min-w-0 flex-1 mr-4">
           {showBackButton && (
             <Button
               variant="ghost"
@@ -892,6 +932,24 @@ export function DashboardPage() {
             <h1 className="truncate text-[17px] font-extrabold leading-5 text-stone-900 dark:text-stone-50">{title}</h1>
             {subtitle && <p className="truncate text-[13px] font-semibold leading-4 text-zinc-500 dark:text-stone-400 mt-1">{subtitle}</p>}
           </div>
+        </div>
+
+        {/* Model Selector Dropdown from Google I/O 2026 */}
+        <div className="flex items-center gap-2 shrink-0">
+          <label htmlFor="model-select" className="text-xs font-bold text-stone-400 dark:text-stone-500 select-none">Model:</label>
+          <select
+            id="model-select"
+            value={selectedModel}
+            onChange={(e) => setSelectedModel(e.target.value)}
+            className="text-xs font-bold bg-[#eef6ff] dark:bg-[#1b2b3c] text-stone-700 dark:text-stone-200 rounded-xl px-3 py-1.5 border-0 focus:outline-none focus:ring-1 focus:ring-blue-500 cursor-pointer shadow-xs select-none transition-colors"
+          >
+            <option value="gemini-3.5-flash">Gemini 3.5 Flash (Medium) ⭐</option>
+            <option value="gemini-3.5-pro">Gemini 3.5 Pro (Large) 🔥</option>
+            <option value="gemini-omni">Gemini Omni ✨</option>
+            <option value="gemini-2.5-flash">Gemini 2.5 Flash</option>
+            <option value="gemini-2.5-pro">Gemini 2.5 Pro</option>
+            <option value="gemini-2.0-flash-thinking">Gemini 2.0 Thinking</option>
+          </select>
         </div>
       </div>
 
@@ -981,24 +1039,76 @@ export function DashboardPage() {
         <div ref={timelineEndRef} />
       </div>
 
-      <div className="h-14 px-5 bg-white dark:bg-[#131d28] border-t border-[#d9e1e8] dark:border-[#223145] flex items-center gap-3 shrink-0">
-        <input
-          value={input}
-          onChange={e => setInput(e.target.value)}
-          onKeyDown={e => e.key === 'Enter' && handleSend()}
-          placeholder={isStreaming ? 'Agent is thinking...' : t('describeTask') || 'Describe a task...'}
-          disabled={isStreaming}
-          className="min-w-0 flex-1 bg-transparent text-[15px] font-semibold text-zinc-650 dark:text-stone-300 outline-hidden placeholder:text-zinc-400 dark:placeholder:text-stone-600"
-        />
-        <button
-          onClick={() => handleSend()}
-          disabled={isStreaming || !input.trim()}
-          className="text-blue-500 hover:text-blue-600 disabled:text-zinc-200 dark:disabled:text-stone-800 transition-colors"
-          type="button"
-          aria-label="Send message"
-        >
-          <Send className="w-6 h-6 shrink-0" />
-        </button>
+      <div className="bg-white dark:bg-[#131d28] border-t border-[#d9e1e8] dark:border-[#223145] flex flex-col shrink-0">
+        {attachedFile && (
+          <div className="px-5 py-2.5 border-b border-[#e9f1f8] dark:border-[#1d2a3a] flex items-center justify-between bg-[#f8fbff] dark:bg-[#162332] animate-in slide-in-from-bottom-2 duration-200">
+            <div className="flex items-center gap-3 min-w-0">
+              {attachedFile.mimeType.startsWith('image/') ? (
+                <div className="w-9 h-9 rounded-lg border border-[#d9e1e8] dark:border-[#223145] bg-stone-100 overflow-hidden shrink-0 flex items-center justify-center">
+                  <img src={`data:${attachedFile.mimeType};base64,${attachedFile.base64}`} alt={attachedFile.name} className="w-full h-full object-cover" />
+                </div>
+              ) : attachedFile.mimeType.startsWith('video/') ? (
+                <div className="w-9 h-9 rounded-lg border border-[#d9e1e8] dark:border-[#223145] bg-stone-100 shrink-0 flex items-center justify-center relative overflow-hidden">
+                  <div className="absolute inset-0 flex items-center justify-center bg-black/25">
+                    <Play className="w-3 h-3 text-white fill-current" />
+                  </div>
+                  <video src={`data:${attachedFile.mimeType};base64,${attachedFile.base64}`} className="w-full h-full object-cover" />
+                </div>
+              ) : (
+                <div className="w-9 h-9 rounded-lg border border-[#d9e1e8] dark:border-[#223145] bg-blue-100 dark:bg-blue-950 shrink-0 flex items-center justify-center text-blue-500">
+                  <Paperclip className="w-4 h-4" />
+                </div>
+              )}
+              <div className="min-w-0">
+                <p className="text-xs font-bold text-stone-800 dark:text-stone-200 truncate max-w-xs">{attachedFile.name}</p>
+                <p className="text-[10px] font-semibold text-zinc-500 dark:text-stone-500 uppercase font-mono mt-0.5">{attachedFile.mimeType}</p>
+              </div>
+            </div>
+            <button
+              onClick={() => setAttachedFile(null)}
+              className="p-1 hover:bg-[#e6effc] dark:hover:bg-[#1d2a3c] text-stone-400 hover:text-stone-600 dark:hover:text-stone-200 rounded-full transition-colors cursor-pointer"
+              title="Remove attachment"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+        )}
+
+        <div className="h-14 px-5 flex items-center gap-3">
+          <input
+            type="file"
+            ref={fileInputRef}
+            onChange={handleFileChange}
+            accept="image/*,video/*"
+            className="hidden"
+          />
+          <button
+            onClick={() => fileInputRef.current?.click()}
+            disabled={isStreaming}
+            className="text-zinc-500 hover:text-blue-500 disabled:text-zinc-350 dark:disabled:text-stone-800 transition-colors p-1"
+            title="Attach Screen Recording or Screenshot"
+            type="button"
+          >
+            <Paperclip className="w-5 h-5 shrink-0" />
+          </button>
+          <input
+            value={input}
+            onChange={e => setInput(e.target.value)}
+            onKeyDown={e => e.key === 'Enter' && handleSend()}
+            placeholder={isStreaming ? 'Agent is thinking...' : t('describeTask') || 'Describe a task...'}
+            disabled={isStreaming}
+            className="min-w-0 flex-1 bg-transparent text-[15px] font-semibold text-zinc-650 dark:text-stone-300 outline-hidden placeholder:text-zinc-400 dark:placeholder:text-stone-600"
+          />
+          <button
+            onClick={() => handleSend()}
+            disabled={isStreaming || (!input.trim() && !attachedFile)}
+            className="text-blue-500 hover:text-blue-600 disabled:text-zinc-200 dark:disabled:text-stone-800 transition-colors"
+            type="button"
+            aria-label="Send message"
+          >
+            <Send className="w-6 h-6 shrink-0" />
+          </button>
+        </div>
       </div>
     </div>
   )

@@ -9,6 +9,10 @@ export const chatRequestSchema = z.object({
   message: z.string().min(1).openapi({ example: 'Clean old spams from Inbox' }),
   sessionId: z.string().min(1).openapi({ example: 'session_123' }),
   model: z.string().optional().openapi({ example: 'gemini-2.5-flash' }),
+  file: z.object({
+    base64: z.string(),
+    mimeType: z.string(),
+  }).optional(),
 })
 
 export const chatRoute = createRoute({

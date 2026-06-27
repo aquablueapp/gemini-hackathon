@@ -34,13 +34,20 @@ from app.tools.code_reader import get_commit_code_outline, get_commit_code_detai
 
 try:
     _, project_id = google.auth.default()
+    has_gcp_auth = True
 except Exception:
     project_id = None
+    has_gcp_auth = False
 
 project_id = project_id or os.environ.get("GOOGLE_CLOUD_PROJECT") or "gemini-hackathon"
 os.environ["GOOGLE_CLOUD_PROJECT"] = project_id
 os.environ["GOOGLE_CLOUD_LOCATION"] = "global"
-os.environ["GOOGLE_GENAI_USE_VERTEXAI"] = "True"
+
+# Use Vertex AI if we have active GCP credentials, otherwise fallback to Gemini Developer API (using GEMINI_API_KEY)
+if has_gcp_auth or os.environ.get("GOOGLE_APPLICATION_CREDENTIALS") or os.environ.get("USE_VERTEX_AI") == "True":
+    os.environ["GOOGLE_GENAI_USE_VERTEXAI"] = "True"
+else:
+    os.environ["GOOGLE_GENAI_USE_VERTEXAI"] = "False"
 
 
 def get_weather(query: str) -> str:
@@ -275,7 +282,13 @@ root_agent = Agent(
         "  2. Fetch commit details via `GET /repos/<owner>/<repo>/commits/<sha>` and read the `patch` field in the files list.\n"
         "  3. Pull raw file contents via `GET /repos/<owner>/<repo>/contents/<path>?ref=<ref>` using `application/vnd.github.v3.raw` Accept header.\n"
         "  4. Parse the syntax and code changes locally inside your Python script using Python's standard `ast` module (e.g., ast.parse) to identify modified classes and functions, counting LOC/metrics.\n"
-        "  5. In your script, declare `google-genai` as a dependency, initialize `genai.Client()`, and send the code diff + AST metrics context to Gemini (e.g. 'gemini-2.5-flash') to execute semantic reviews and output the detailed tech report to stdout."
+        "  5. In your script, declare `google-genai` as a dependency, initialize `genai.Client()`, and send the code diff + AST metrics context to Gemini (e.g. 'gemini-2.5-flash') to execute semantic reviews and output the detailed tech report to stdout.\n\n"
+        "6. Multimodal Workflow Generation with Gemini Omni (Screen Recordings & Screenshots):\n"
+        "- If the user uploads/attaches a short screen video (e.g., video/mp4) or screenshots (e.g., image/png, image/jpeg) showing a manual, repetitive process, you MUST utilize your visual and multi-modal understanding to:\n"
+        "  a. Identify and dissect the sequential steps of the manual action flow (e.g., button clicks, navigation, data extraction, copy-pasting, API calls, form submissions).\n"
+        "  b. Automatically design, write, and propose a clean, automated, and production-ready Python Applet to fully replace that manual flow.\n"
+        "  c. Use robust standard libraries or modern packages (e.g. google-genai, requests, bs4) to accomplish the automation. Always print action steps clearly to stdout during dry-runs so they are rendered in the execution sandbox terminal.\n"
+        "  d. Output a dynamic flowchart schema using the ```workflow-json block to visually illustrate the automated workflow to the user, run the dry-run of the script using `dry_run_script` to let the user review affected items, and compile the script into a permanent Applet using `compile_applet` when requested."
     ),
     tools=[get_weather, get_current_time, dry_run_script, compile_applet, get_commit_code_outline, get_commit_code_details],
     before_model_callback=before_model_callback,
